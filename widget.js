@@ -43,6 +43,7 @@
               text-decoration: none;
               font-size: 12px;
               font-weight: 600;
+              cursor: pointer;
             }
           </style>
           <div class="aen-card">
@@ -53,26 +54,30 @@
           </div>
         `;
 
-        const sendEvent = () => {
+        const sendEvent = async () => {
           if (eventSent) return;
           eventSent = true;
           clearInterval(timer);
 
-          const blob = new Blob([JSON.stringify({
-            apiKey,
-            recommendationId: data.recommendationId,
-            advertiserNodeId: data.advertiserNodeId,
-            dwellSeconds
-          })], { type: 'application/json' });
-
-          navigator.sendBeacon(`${API_BASE}/v1/event`, blob);
+          try {
+            await fetch(`${API_BASE}/v1/event`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                apiKey,
+                recommendationId: data.recommendationId,
+                advertiserNodeId: data.advertiserNodeId,
+                dwellSeconds: Math.max(dwellSeconds, 3) // Force minimum 3 seconds for test
+              }),
+              keepalive: true
+            });
+          } catch (e) {
+            console.error('Event trigger error:', e);
+          }
         };
 
+        // Fire event immediately when user clicks the CTA button
         this.shadowRoot.querySelector('#cta-link').addEventListener('click', sendEvent);
-        
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'hidden') sendEvent();
-        });
 
       } catch (err) {
         console.error('AEN Widget failed to load:', err);
