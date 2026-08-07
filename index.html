@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AEN Autonomous Network - Node Registration</title>
+  <title>AEN Network - Register & Launch Campaigns</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -14,6 +14,8 @@
       --accent: #238636;
       --accent-hover: #2ea043;
       --code-bg: #010409;
+      --blue-accent: #1f6feb;
+      --blue-hover: #388bfd;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -25,11 +27,11 @@
       justify-content: center;
     }
     .container {
-      max-width: 600px;
+      max-width: 650px;
       width: 100%;
     }
-    h1 { color: var(--heading); margin-bottom: 8px; }
-    p { margin-top: 0; color: #8b949e; line-height: 1.5; }
+    h1 { color: var(--heading); margin-bottom: 4px; font-size: 26px; }
+    p.subhead { margin-top: 0; color: #8b949e; margin-bottom: 24px; font-size: 14px; }
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -37,29 +39,39 @@
       padding: 24px;
       margin-bottom: 24px;
     }
+    .card h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: var(--heading);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
     label {
       display: block;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       margin-bottom: 6px;
       color: var(--heading);
     }
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 10px 12px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--heading);
       font-size: 14px;
       box-sizing: border-box;
+      font-family: inherit;
     }
-    input:focus, select:focus {
+    textarea { resize: vertical; min-height: 70px; }
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: #58a6ff;
     }
-    button {
+    .btn-green {
       width: 100%;
       background: var(--accent);
       color: white;
@@ -68,16 +80,28 @@
       border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
-      font-size: 15px;
+      font-size: 14px;
     }
-    button:hover { background: var(--accent-hover); }
+    .btn-green:hover { background: var(--accent-hover); }
+    .btn-blue {
+      width: 100%;
+      background: var(--blue-accent);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-blue:hover { background: var(--blue-hover); }
     .result {
       display: none;
       background: var(--code-bg);
       border: 1px solid #238636;
       border-radius: 6px;
-      padding: 16px;
-      margin-top: 16px;
+      padding: 14px;
+      margin-top: 14px;
     }
     .key-box {
       font-family: monospace;
@@ -87,15 +111,18 @@
       color: #7ee787;
       word-break: break-all;
       margin: 8px 0;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Join the AEN Distribution Network</h1>
-    <p>Register your app node to get 20 starter credits and participate in autonomous cross-promotion.</p>
+    <h1>AEN Network Portal</h1>
+    <p class="subhead">Register app nodes, manage API keys, and launch autonomous cross-promotion campaigns.</p>
 
+    <!-- SECTION 1: NODE REGISTRATION -->
     <div class="card">
+      <h2>1. Register App Node</h2>
       <form id="regForm">
         <label for="appName">App / Product Name</label>
         <input type="text" id="appName" placeholder="e.g. PromptDB AI" required />
@@ -111,31 +138,63 @@
           <option value="AI & ML">AI & ML</option>
         </select>
 
-        <button type="submit">Register Node & Claim 20 Credits</button>
+        <button type="submit" class="btn-green">Register Node & Claim 20 Credits</button>
       </form>
 
-      <div id="result" class="result">
-        <h3 style="color: #7ee787; margin-top:0;">Node Registered Successfully!</h3>
-        <p style="color: var(--text); margin-bottom: 4px;">Save your API Key securely:</p>
+      <div id="regResult" class="result">
+        <h3 style="color: #7ee787; margin-top:0; font-size: 15px;">Node Registered Successfully!</h3>
+        <p style="color: var(--text); margin-bottom: 4px; font-size: 13px;">Your API Key (Auto-filled into Campaign Form below):</p>
         <div id="keyDisplay" class="key-box"></div>
-        <p style="font-size: 12px; color: #8b949e; margin-bottom: 0;">Use this API Key in your widget and campaign HTTP headers.</p>
+      </div>
+    </div>
+
+    <!-- SECTION 2: CAMPAIGN PUBLISHER -->
+    <div class="card">
+      <h2>2. Publish Recommendation Campaign</h2>
+      <form id="campForm">
+        <label for="apiKey">Node API Key</label>
+        <input type="text" id="apiKey" placeholder="key_..." required />
+
+        <label for="campTitle">Campaign Title</label>
+        <input type="text" id="campTitle" placeholder="e.g. PromptDB Studio" required />
+
+        <label for="campDesc">Short Description</label>
+        <textarea id="campDesc" placeholder="Organize and optimize your AI prompts instantly." required></textarea>
+
+        <label for="targetUrl">Target URL</label>
+        <input type="url" id="targetUrl" placeholder="https://promptdb.ai" required />
+
+        <label for="ctaText">Button Text (CTA)</label>
+        <input type="text" id="ctaText" placeholder="Try Free" value="Learn More" required />
+
+        <button type="submit" class="btn-blue">Launch Campaign</button>
+      </form>
+
+      <div id="campResult" class="result" style="border-color: #388bfd;">
+        <h3 style="color: #58a6ff; margin-top:0; font-size: 15px;">Campaign Published & Live!</h3>
+        <p style="color: var(--text); margin-bottom: 4px; font-size: 13px;">Campaign ID:</p>
+        <div id="campDisplay" class="key-box" style="color: #58a6ff;"></div>
       </div>
     </div>
   </div>
 
   <script>
-    const form = document.getElementById('regForm');
-    const resultDiv = document.getElementById('result');
-    const keyDisplay = document.getElementById('keyDisplay');
+    const API_BASE = 'https://aen-backend-production-a6b2.up.railway.app';
 
-    form.addEventListener('submit', async (e) => {
+    // 1. Handle Registration
+    const regForm = document.getElementById('regForm');
+    const regResult = document.getElementById('regResult');
+    const keyDisplay = document.getElementById('keyDisplay');
+    const apiKeyInput = document.getElementById('apiKey');
+
+    regForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('appName').value;
       const domain = document.getElementById('appDomain').value;
       const category = document.getElementById('appCategory').value;
 
       try {
-        const res = await fetch('https://aen-backend-production-a6b2.up.railway.app/v1/nodes', {
+        const res = await fetch(`${API_BASE}/v1/nodes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, domain, category })
@@ -143,14 +202,47 @@
         const data = await res.json();
 
         if (res.ok) {
-          keyDisplay.innerText = data.node.apiKey;
-          resultDiv.style.display = 'block';
-          form.reset();
+          const key = data.node.apiKey;
+          keyDisplay.innerText = key;
+          apiKeyInput.value = key; // Auto-populate Campaign API Key field
+          regResult.style.display = 'block';
         } else {
           alert('Error: ' + (data.details || data.error));
         }
       } catch (err) {
-        alert('Network error. Failed to reach server.');
+        alert('Network error. Failed to connect to server.');
+      }
+    });
+
+    // 2. Handle Campaign Submission
+    const campForm = document.getElementById('campForm');
+    const campResult = document.getElementById('campResult');
+    const campDisplay = document.getElementById('campDisplay');
+
+    campForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const apiKey = apiKeyInput.value;
+      const title = document.getElementById('campTitle').value;
+      const description = document.getElementById('campDesc').value;
+      const targetUrl = document.getElementById('targetUrl').value;
+      const ctaText = document.getElementById('ctaText').value;
+
+      try {
+        const res = await fetch(`${API_BASE}/v1/recommendations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey, title, description, targetUrl, ctaText })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          campDisplay.innerText = data.recommendation.id;
+          campResult.style.display = 'block';
+        } else {
+          alert('Error: ' + (data.details || data.error));
+        }
+      } catch (err) {
+        alert('Network error. Failed to publish campaign.');
       }
     });
   </script>
