@@ -63,7 +63,7 @@ async function initDb() {
 
   try {
     // Reset database tables during initial development setup
-    // Remove these DROP statements after the first successful deployment
+    // Remove these DROP statements after the first successful deployment if data persistence is needed
     await client.query(`
       DROP TABLE IF EXISTS click_tokens CASCADE;
       DROP TABLE IF EXISTS campaigns CASCADE;
@@ -113,18 +113,6 @@ async function initDb() {
     console.error('Database init error:', err);
     process.exit(1);
 
-  } finally {
-    client.release();
-  }
-}
-
-      CREATE INDEX IF NOT EXISTS idx_click_tokens_created_at ON click_tokens(created_at);
-      CREATE INDEX IF NOT EXISTS idx_campaigns_node_id ON campaigns(node_id);
-    `);
-    console.log('Database tables verified.');
-  } catch (err) {
-    console.error('Database init error:', err);
-    process.exit(1);
   } finally {
     client.release();
   }
