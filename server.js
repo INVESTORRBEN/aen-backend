@@ -1,163 +1,152 @@
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
-const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+// In-memory database storage
+const nodes = {};
+const campaigns = [];
+const events = [];
+
+// Rate Limiter: Max 5 click events per IP every 15 minutes
+const clickRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: "Too many clicks from this IP. Credit settlement throttled to prevent spam."
+  }
 });
 
-// 1. Health check route
+// 1. Health check endpoint
 app.get('/', (req, res) => {
-  res.json({ status: 'online', network: 'AEN Autonomous Distribution Network v1.0' });
+  res.json({ status: "AEN Backend Operational", nodesCount: Object.keys(nodes).length, activeCampaigns: campaigns.length });
 });
 
-// 2. Register a new builder app node
-app.post('/v1/nodes', async (req, res) => {
-  const { name, domain, category } = req.body;
-  if (!name) return res.status(400).json({ error: 'Missing node/app name' });
-
-  try {
-    const nodeId = crypto.randomUUID();
-    const apiKey = 'key_' + crypto.randomBytes(12).toString('hex');
-    const starterCredits = 20.0000;
-    const nodeDomain = domain || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
-    const nodeCategory = category || 'Developer Tools';
-
-    const result = await pool.query(
-      `INSERT INTO nodes (id, name, domain, category, api_key, credit_balance) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING id, name, domain, category, api_key AS "apiKey", credit_balance AS "creditBalance"`,
-      [nodeId, name, nodeDomain, nodeCategory, apiKey, starterCredits]
-    );
-
-    res.status(201).json({
-      message: 'App node successfully registered',
-      node: result.rows[0]
-    });
-  } catch (err) {
-    console.error('Registration Error:', err);
-    res.status(500).json({ error: 'Failed to register app node', details: err.message });
+// 2. Node registration endpoint
+app.post('/v1/node/register', (req, res) => {
+  const { appName, domain, category } = req.body;
+  if (!appName || !domain) {
+    return res.status(400).json({ error: "Missing required fields: appName, domain" });
   }
+
+  const nodeId = 'node_' + Math.random().toString(36).substr(2, 9);
+  const apiKey = 'key_' + Math.random().toString(36).substr(2, 16) + Math.random().toString(36).substr(2, 8);
+
+  nodes[nodeId] = {
+    nodeId,
+    apiKey,
+    appName,
+    domain,
+    category: category || 'General',
+    credits: 20, // 20 free initial credits
+    registeredAt: new Date().toISOString()
+  };
+
+  return res.status(201).json({
+    success: true,
+    nodeId,
+    apiKey,
+    credits: 20
+  });
 });
 
-// 3. Publish a new recommendation campaign
-app.post('/v1/recommendations', async (req, res) => {
+// 3. Launch campaign endpoint
+app.post('/v1/campaign/create', (req, res) => {
   const { apiKey, title, description, targetUrl, ctaText } = req.body;
-  if (!apiKey || !title || !description || !targetUrl) {
-    return res.status(400).json({ error: 'Missing required parameters (apiKey, title, description, targetUrl)' });
+  
+  const node = Object.values(nodes).find(n => n.apiKey === apiKey);
+  if (!node) {
+    return res.status(401).json({ error: "Invalid API key" });
   }
 
-  try {
-    const nodeRes = await pool.query('SELECT id FROM nodes WHERE api_key = $1', [apiKey]);
-    if (nodeRes.rows.length === 0) return res.status(401).json({ error: 'Invalid API Key' });
-
-    const nodeId = nodeRes.rows[0].id;
-    const recId = crypto.randomUUID();
-    const cta = ctaText || 'Learn More';
-
-    const result = await pool.query(
-      `INSERT INTO recommendations (id, node_id, title, description, target_url, cta_text, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, true)
-       RETURNING id, title, description, target_url AS "targetUrl", cta_text AS "ctaText"`,
-      [recId, nodeId, title, description, targetUrl, cta]
-    );
-
-    res.status(201).json({
-      message: 'Campaign published successfully',
-      recommendation: result.rows[0]
-    });
-  } catch (err) {
-    console.error('Campaign Error:', err);
-    res.status(500).json({ error: 'Failed to publish recommendation', details: err.message });
+  if (node.credits < 1) {
+    return res.status(403).json({ error: "Insufficient credits to launch campaign" });
   }
+
+  const campaignId = 'camp_' + Math.random().toString(36).substr(2, 9);
+  const newCampaign = {
+    campaignId,
+    nodeId: node.nodeId,
+    title,
+    description,
+    targetUrl,
+    ctaText: ctaText || "Learn More",
+    createdAt: new Date().toISOString()
+  };
+
+  campaigns.push(newCampaign);
+  return res.status(201).json({ success: true, campaign: newCampaign });
 });
 
-// 4. Serve matching cross-promotion to widget
-app.get('/v1/recommendation', async (req, res) => {
-  const { apiKey } = req.query;
-  if (!apiKey) return res.status(400).json({ error: 'Missing apiKey' });
+// 4. Recommendation ad fetch endpoint (Unthrottled for high speed)
+app.get('/v1/recommendation', (req, res) => {
+  const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+  const publisherNode = Object.values(nodes).find(n => n.apiKey === apiKey);
 
-  try {
-    const publisherRes = await pool.query('SELECT id FROM nodes WHERE api_key = $1', [apiKey]);
-    if (publisherRes.rows.length === 0) return res.status(401).json({ error: 'Invalid API Key' });
-    const publisherId = publisherRes.rows[0].id;
-
-    const recRes = await pool.query(`
-      SELECT 
-        r.id AS "recommendationId",
-        r.node_id AS "advertiserNodeId",
-        r.title,
-        r.description,
-        COALESCE(r.target_url, 'https://github.com') AS "targetUrl",
-        r.cta_text AS "ctaText"
-      FROM recommendations r
-      JOIN nodes n ON r.node_id = n.id
-      WHERE r.node_id != $1 AND r.is_active = true AND n.credit_balance > 0
-      ORDER BY RANDOM()
-      LIMIT 1
-    `, [publisherId]);
-
-    if (recRes.rows.length === 0) return res.status(404).json({ error: 'No active recommendations available' });
-
-    res.json(recRes.rows[0]);
-  } catch (err) {
-    console.error('Recommendation Error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+  if (!publisherNode) {
+    return res.status(401).json({ error: "Invalid API key" });
   }
+
+  // Filter out advertiser campaigns from the publisher's own node
+  const availableCampaigns = campaigns.filter(c => {
+    const advertiser = nodes[c.nodeId];
+    return c.nodeId !== publisherNode.nodeId && advertiser && advertiser.credits >= 1;
+  });
+
+  if (availableCampaigns.length === 0) {
+    return res.status(200).json({ recommendation: null, message: "No active third-party campaigns available." });
+  }
+
+  // Serve a random matching campaign
+  const selected = availableCampaigns[Math.floor(Math.random() * availableCampaigns.length)];
+  return res.status(200).json({ recommendation: selected });
 });
 
-// 5. Settle credit transfer on impression / click event (Transaction Protected)
-app.post('/v1/event', async (req, res) => {
-  const { apiKey, recommendationId, advertiserNodeId, dwellSeconds, visitorHash } = req.body;
-  if (!apiKey || !recommendationId || !advertiserNodeId) {
-    return res.status(400).json({ error: 'Missing required parameters' });
+// 5. Click conversion endpoint (Protected by Click Rate Limiter)
+app.post('/v1/event', clickRateLimiter, (req, res) => {
+  const { apiKey, campaignId } = req.body;
+
+  const publisherNode = Object.values(nodes).find(n => n.apiKey === apiKey);
+  if (!publisherNode) {
+    return res.status(401).json({ error: "Invalid API key" });
   }
 
-  const client = await pool.connect();
-
-  try {
-    const pubRes = await client.query('SELECT id FROM nodes WHERE api_key = $1', [apiKey]);
-    if (pubRes.rows.length === 0) {
-      client.release();
-      return res.status(401).json({ error: 'Invalid API Key' });
-    }
-    const publisherNodeId = pubRes.rows[0].id;
-    const eventId = crypto.randomUUID();
-    const ledgerId = crypto.randomUUID();
-    const isQualified = true;
-    const qauAmount = 1.0000;
-
-    await client.query('BEGIN');
-
-    await client.query(`
-      INSERT INTO qau_events (id, publisher_node_id, advertiser_node_id, recommendation_id, visitor_hash, dwell_seconds, is_qualified)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, [eventId, publisherNodeId, advertiserNodeId, recommendationId, visitorHash || 'anon_visitor', dwellSeconds || 3, isQualified]);
-
-    await client.query('UPDATE nodes SET credit_balance = credit_balance - $1 WHERE id = $2', [qauAmount, advertiserNodeId]);
-    await client.query('UPDATE nodes SET credit_balance = credit_balance + $1 WHERE id = $2', [qauAmount, publisherNodeId]);
-
-    await client.query(`
-      INSERT INTO credit_ledger (id, from_node_id, to_node_id, qau_event_id, amount, transaction_type)
-      VALUES ($1, $2, $3, $4, $5, 'QAU_EARNED')
-    `, [ledgerId, advertiserNodeId, publisherNodeId, eventId, qauAmount]);
-
-    await client.query('COMMIT');
-    res.json({ success: true, qualified: isQualified });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Event Settlement Error:', err);
-    res.status(500).json({ error: 'Failed to record event', details: err.message });
-  } finally {
-    client.release();
+  const campaign = campaigns.find(c => c.campaignId === campaignId);
+  if (!campaign) {
+    return res.status(404).json({ error: "Campaign not found" });
   }
+
+  const advertiserNode = nodes[campaign.nodeId];
+  if (!advertiserNode || advertiserNode.credits < 1) {
+    return res.status(400).json({ error: "Advertiser balance exhausted" });
+  }
+
+  // Settle credit transfer between nodes
+  advertiserNode.credits -= 1;
+  publisherNode.credits += 1;
+
+  events.push({
+    eventId: 'evt_' + Math.random().toString(36).substr(2, 9),
+    publisherNodeId: publisherNode.nodeId,
+    advertiserNodeId: advertiserNode.nodeId,
+    campaignId,
+    timestamp: new Date().toISOString()
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Credit transfer settled",
+    publisherCredits: publisherNode.credits
+  });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`AEN Backend running on port ${PORT}`);
+});
