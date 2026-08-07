@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
 
 // 2. Node registration endpoint
 app.post('/v1/node/register', (req, res) => {
-  const { appName, domain, category } = req.body;
+  const { appName, domain, category } = req.body || {};
   if (!appName || !domain) {
     return res.status(400).json({ error: "Missing required fields: appName, domain" });
   }
@@ -49,8 +49,8 @@ app.post('/v1/node/register', (req, res) => {
   nodes[nodeId] = {
     nodeId,
     apiKey,
-    appName,
-    domain,
+    appName: appName.trim(),
+    domain: domain.trim(),
     category: category || 'General',
     credits: 20, // 20 free initial credits
     registeredAt: new Date().toISOString()
@@ -66,8 +66,12 @@ app.post('/v1/node/register', (req, res) => {
 
 // 3. Launch campaign endpoint
 app.post('/v1/campaign/create', (req, res) => {
-  const { apiKey, title, description, targetUrl, ctaText } = req.body;
+  const { apiKey, title, description, targetUrl, ctaText } = req.body || {};
   
+  if (!apiKey || !title || !targetUrl) {
+    return res.status(400).json({ error: "Missing required campaign fields" });
+  }
+
   const node = Object.values(nodes).find(n => n.apiKey === apiKey);
   if (!node) {
     return res.status(401).json({ error: "Invalid API key" });
@@ -77,14 +81,20 @@ app.post('/v1/campaign/create', (req, res) => {
     return res.status(403).json({ error: "Insufficient credits to launch campaign" });
   }
 
+  // Auto-prepend https:// if protocol is missing
+  let formattedUrl = targetUrl.trim();
+  if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+    formattedUrl = 'https://' + formattedUrl;
+  }
+
   const campaignId = 'camp_' + Math.random().toString(36).substr(2, 9);
   const newCampaign = {
     campaignId,
     nodeId: node.nodeId,
-    title,
-    description,
-    targetUrl,
-    ctaText: ctaText || "Learn More",
+    title: title.trim(),
+    description: (description || '').trim(),
+    targetUrl: formattedUrl,
+    ctaText: (ctaText || "Learn More").trim(),
     createdAt: new Date().toISOString()
   };
 
@@ -118,8 +128,9 @@ app.get('/v1/recommendation', (req, res) => {
 
 // 5. Click conversion endpoint (Protected by Click Rate Limiter)
 app.post('/v1/event', clickRateLimiter, (req, res) => {
-  const { apiKey } = req.body;
-  const campaignId = req.body.campaignId || req.body.recommendationId;
+  const body = req.body || {};
+  const apiKey = body.apiKey;
+  const campaignId = body.campaignId || body.recommendationId;
 
   const publisherNode = Object.values(nodes).find(n => n.apiKey === apiKey);
   if (!publisherNode) {
