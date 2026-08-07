@@ -18,6 +18,7 @@
 
         let dwellSeconds = 0;
         let timer = setInterval(() => { dwellSeconds++; }, 1000);
+        let eventSent = false;
 
         this.shadowRoot.innerHTML = `
           <style>
@@ -53,17 +54,25 @@
         `;
 
         const sendEvent = () => {
+          if (eventSent) return;
+          eventSent = true;
           clearInterval(timer);
-          navigator.sendBeacon(`${API_BASE}/v1/event`, JSON.stringify({
+
+          const blob = new Blob([JSON.stringify({
             apiKey,
             recommendationId: data.recommendationId,
             advertiserNodeId: data.advertiserNodeId,
             dwellSeconds
-          }));
+          })], { type: 'application/json' });
+
+          navigator.sendBeacon(`${API_BASE}/v1/event`, blob);
         };
 
         this.shadowRoot.querySelector('#cta-link').addEventListener('click', sendEvent);
-        window.addEventListener('beforeunload', sendEvent);
+        
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') sendEvent();
+        });
 
       } catch (err) {
         console.error('AEN Widget failed to load:', err);
