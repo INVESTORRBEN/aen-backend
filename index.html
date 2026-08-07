@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AEN Network - Register & Launch Campaigns</title>
+  <title>AEN Network - Register, Launch & Embed</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -16,6 +16,7 @@
       --code-bg: #010409;
       --blue-accent: #1f6feb;
       --blue-hover: #388bfd;
+      --purple-accent: #8957e5;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -27,7 +28,7 @@
       justify-content: center;
     }
     .container {
-      max-width: 650px;
+      max-width: 680px;
       width: 100%;
     }
     h1 { color: var(--heading); margin-bottom: 4px; font-size: 26px; }
@@ -71,9 +72,8 @@
       outline: none;
       border-color: #58a6ff;
     }
-    .btn-green {
+    .btn {
       width: 100%;
-      background: var(--accent);
       color: white;
       border: none;
       padding: 12px;
@@ -82,18 +82,9 @@
       cursor: pointer;
       font-size: 14px;
     }
+    .btn-green { background: var(--accent); }
     .btn-green:hover { background: var(--accent-hover); }
-    .btn-blue {
-      width: 100%;
-      background: var(--blue-accent);
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 14px;
-    }
+    .btn-blue { background: var(--blue-accent); }
     .btn-blue:hover { background: var(--blue-hover); }
     .result {
       display: none;
@@ -106,12 +97,14 @@
     .key-box {
       font-family: monospace;
       background: #161b22;
-      padding: 10px;
-      border-radius: 4px;
+      padding: 12px;
+      border-radius: 6px;
       color: #7ee787;
       word-break: break-all;
       margin: 8px 0;
-      font-size: 13px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      border: 1px solid var(--border);
     }
   </style>
 </head>
@@ -138,12 +131,12 @@
           <option value="AI & ML">AI & ML</option>
         </select>
 
-        <button type="submit" class="btn-green">Register Node & Claim 20 Credits</button>
+        <button type="submit" class="btn btn-green">Register Node & Claim 20 Credits</button>
       </form>
 
       <div id="regResult" class="result">
         <h3 style="color: #7ee787; margin-top:0; font-size: 15px;">Node Registered Successfully!</h3>
-        <p style="color: var(--text); margin-bottom: 4px; font-size: 13px;">Your API Key (Auto-filled into Campaign Form below):</p>
+        <p style="color: var(--text); margin-bottom: 4px; font-size: 13px;">Your API Key (Auto-filled below):</p>
         <div id="keyDisplay" class="key-box"></div>
       </div>
     </div>
@@ -167,7 +160,7 @@
         <label for="ctaText">Button Text (CTA)</label>
         <input type="text" id="ctaText" placeholder="Try Free" value="Learn More" required />
 
-        <button type="submit" class="btn-blue">Launch Campaign</button>
+        <button type="submit" class="btn btn-blue">Launch Campaign</button>
       </form>
 
       <div id="campResult" class="result" style="border-color: #388bfd;">
@@ -175,6 +168,19 @@
         <p style="color: var(--text); margin-bottom: 4px; font-size: 13px;">Campaign ID:</p>
         <div id="campDisplay" class="key-box" style="color: #58a6ff;"></div>
       </div>
+    </div>
+
+    <!-- SECTION 3: EMBED CODE GENERATOR -->
+    <div class="card">
+      <h2>3. Copy Embed Widget Code</h2>
+      <p style="font-size: 13px; color: #8b949e;">Paste this snippet into your app HTML to display cross-promotions and earn credits.</p>
+      
+      <label for="embedApiKey">API Key for Snippet</label>
+      <input type="text" id="embedApiKey" placeholder="key_..." oninput="updateSnippet()" />
+
+      <label>Embed HTML Snippet</label>
+      <div id="snippetBox" class="key-box" style="color: #d2a8ff;"></div>
+      <button class="btn" style="background: var(--purple-accent);" onclick="copySnippet()">Copy Embed Code</button>
     </div>
   </div>
 
@@ -186,6 +192,7 @@
     const regResult = document.getElementById('regResult');
     const keyDisplay = document.getElementById('keyDisplay');
     const apiKeyInput = document.getElementById('apiKey');
+    const embedApiKeyInput = document.getElementById('embedApiKey');
 
     regForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -204,7 +211,9 @@
         if (res.ok) {
           const key = data.node.apiKey;
           keyDisplay.innerText = key;
-          apiKeyInput.value = key; // Auto-populate Campaign API Key field
+          apiKeyInput.value = key;
+          embedApiKeyInput.value = key;
+          updateSnippet();
           regResult.style.display = 'block';
         } else {
           alert('Error: ' + (data.details || data.error));
@@ -245,6 +254,37 @@
         alert('Network error. Failed to publish campaign.');
       }
     });
+
+    // 3. Generate Embed Snippet
+    function updateSnippet() {
+      const key = embedApiKeyInput.value || 'YOUR_API_KEY';
+      const snippet = `<!-- AEN Autonomous Recommendation Widget -->
+<div id="aen-widget"></div>
+<script>
+  (async function() {
+    const res = await fetch('${API_BASE}/v1/recommendation?apiKey=${key}');
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('aen-widget').innerHTML = \`
+      <div style="border:1px solid #30363d;background:#161b22;padding:16px;border-radius:8px;max-width:320px;font-family:sans-serif;color:#c9d1d9;">
+        <span style="font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:1px;">Recommended</span>
+        <h4 style="margin:6px 0;color:#f0f6fc;">\${data.title}</h4>
+        <p style="font-size:12px;margin:0 0 12px 0;color:#8b949e;">\${data.description}</p>
+        <a href="\${data.targetUrl}" target="_blank" onclick="fetch('${API_BASE}/v1/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey:'${key}',recommendationId:'\${data.recommendationId}',advertiserNodeId:'\${data.advertiserNodeId}'})})" style="display:inline-block;background:#238636;color:#fff;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-weight:bold;">\${data.ctaText} &rarr;</a>
+      </div>\`;
+  })();
+<\/script>`;
+      document.getElementById('snippetBox').innerText = snippet;
+    }
+
+    function copySnippet() {
+      const text = document.getElementById('snippetBox').innerText;
+      navigator.clipboard.writeText(text);
+      alert('Embed snippet copied to clipboard!');
+    }
+
+    // Initialize snippet on load
+    updateSnippet();
   </script>
 </body>
 </html>
