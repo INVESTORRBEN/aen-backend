@@ -16,10 +16,6 @@
         if (!res.ok) return;
         const data = await res.json();
 
-        let dwellSeconds = 0;
-        let timer = setInterval(() => { dwellSeconds++; }, 1000);
-        let eventSent = false;
-
         this.shadowRoot.innerHTML = `
           <style>
             .aen-card {
@@ -50,34 +46,26 @@
             <div class="aen-tag">Recommended by Partner</div>
             <div class="aen-title">${data.title}</div>
             <div class="aen-desc">${data.description}</div>
-            <a class="aen-btn" href="${data.targetUrl}" target="_blank" id="cta-link">${data.ctaText}</a>
+            <a class="aen-btn" id="cta-link">${data.ctaText}</a>
           </div>
         `;
 
-        const sendEvent = async () => {
-          if (eventSent) return;
-          eventSent = true;
-          clearInterval(timer);
+        this.shadowRoot.querySelector('#cta-link').addEventListener('click', async (e) => {
+          e.preventDefault();
+          
+          await fetch(`${API_BASE}/v1/event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              apiKey,
+              recommendationId: data.recommendationId,
+              advertiserNodeId: data.advertiserNodeId,
+              dwellSeconds: 5
+            })
+          });
 
-          try {
-            await fetch(`${API_BASE}/v1/event`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                apiKey,
-                recommendationId: data.recommendationId,
-                advertiserNodeId: data.advertiserNodeId,
-                dwellSeconds: Math.max(dwellSeconds, 3) // Force minimum 3 seconds for test
-              }),
-              keepalive: true
-            });
-          } catch (e) {
-            console.error('Event trigger error:', e);
-          }
-        };
-
-        // Fire event immediately when user clicks the CTA button
-        this.shadowRoot.querySelector('#cta-link').addEventListener('click', sendEvent);
+          window.open(data.targetUrl, '_blank');
+        });
 
       } catch (err) {
         console.error('AEN Widget failed to load:', err);
