@@ -3,288 +3,415 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AEN Network - Register, Launch & Embed</title>
+  <title>AEN - Autonomous Exchange Network</title>
   <style>
     :root {
-      --bg: #0d1117;
-      --card-bg: #161b22;
-      --border: #30363d;
-      --text: #c9d1d9;
-      --heading: #f0f6fc;
-      --accent: #238636;
-      --accent-hover: #2ea043;
-      --code-bg: #010409;
-      --blue-accent: #1f6feb;
-      --blue-hover: #388bfd;
-      --purple-accent: #8957e5;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
     }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 40px 20px;
+      padding: 20px;
       display: flex;
       justify-content: center;
     }
+
     .container {
-      max-width: 680px;
+      max-width: 800px;
       width: 100%;
     }
-    h1 { color: var(--heading); margin-bottom: 4px; font-size: 26px; }
-    p.subhead { margin-top: 0; color: #8b949e; margin-bottom: 24px; font-size: 14px; }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      color: var(--accent);
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: var(--card-bg);
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      margin-bottom: 24px;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
     }
+
     .card h2 {
       margin-top: 0;
-      font-size: 18px;
-      color: var(--heading);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 10px;
-      margin-bottom: 16px;
+      font-size: 1.2rem;
+      color: var(--accent);
     }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
     label {
       display: block;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: var(--heading);
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: var(--text-muted);
     }
+
     input, select, textarea {
       width: 100%;
-      padding: 10px 12px;
-      margin-bottom: 14px;
-      background: var(--code-bg);
+      padding: 10px;
+      background: #0f172a;
       border: 1px solid var(--border);
       border-radius: 6px;
-      color: var(--heading);
-      font-size: 14px;
+      color: var(--text);
       box-sizing: border-box;
-      font-family: inherit;
     }
-    textarea { resize: vertical; min-height: 70px; }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #58a6ff;
-    }
-    .btn {
+
+    button.btn {
       width: 100%;
-      color: white;
+      padding: 12px;
+      background: var(--accent);
+      color: #000;
       border: none;
-      padding: 12px;
       border-radius: 6px;
-      font-weight: 600;
+      font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
     }
-    .btn-green { background: var(--accent); }
-    .btn-green:hover { background: var(--accent-hover); }
-    .btn-blue { background: var(--blue-accent); }
-    .btn-blue:hover { background: var(--blue-hover); }
-    .result {
-      display: none;
-      background: var(--code-bg);
-      border: 1px solid #238636;
-      border-radius: 6px;
-      padding: 14px;
-      margin-top: 14px;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
     }
-    .key-box {
-      font-family: monospace;
-      background: #161b22;
-      padding: 12px;
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-muted);
+    }
+
+    code {
+      background: #000;
+      padding: 10px;
       border-radius: 6px;
-      color: #7ee787;
-      word-break: break-all;
-      margin: 8px 0;
-      font-size: 12px;
+      display: block;
       white-space: pre-wrap;
-      border: 1px solid var(--border);
+      word-break: break-all;
+      color: var(--accent);
+      font-size: 0.8rem;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>AEN Network Portal</h1>
-    <p class="subhead">Register app nodes, manage API keys, and launch autonomous cross-promotion campaigns.</p>
 
-    <!-- SECTION 1: NODE REGISTRATION -->
+<div class="container">
+  <header>
+    <h1>Autonomous Exchange Network</h1>
+    <p class="subtitle">Decentralized Cross-Promotion & Credit Ledger</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('portal', this)">Developer Portal</button>
+    <button class="tab-btn" onclick="switchTab('dashboard', this)">Live Dashboard</button>
+  </div>
+
+  <!-- PORTAL TAB -->
+  <div id="portal" class="tab-content active">
+    <!-- SECTION 1 -->
     <div class="card">
-      <h2>1. Register App Node</h2>
-      <form id="regForm">
-        <label for="appName">App / Product Name</label>
-        <input type="text" id="appName" placeholder="e.g. PromptDB AI" required />
-
-        <label for="appDomain">Domain</label>
-        <input type="text" id="appDomain" placeholder="e.g. promptdb.ai" required />
-
-        <label for="appCategory">Category</label>
-        <select id="appCategory">
+      <h2>Section 1: Register App Node</h2>
+      <div class="form-group">
+        <label>App / Product Name</label>
+        <input type="text" id="regAppName" placeholder="My Cool Web App" />
+      </div>
+      <div class="form-group">
+        <label>Domain</label>
+        <input type="text" id="regDomain" placeholder="myapp.com" />
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="regCategory">
           <option value="Developer Tools">Developer Tools</option>
-          <option value="Design & Creative">Design & Creative</option>
           <option value="Productivity">Productivity</option>
-          <option value="AI & ML">AI & ML</option>
+          <option value="SaaS">SaaS</option>
+          <option value="General">General</option>
         </select>
-
-        <button type="submit" class="btn btn-green">Register Node & Claim 20 Credits</button>
-      </form>
-
-      <div id="regResult" class="result">
-        <h3 style="color: #7ee787; margin-top:0; font-size: 15px;">Node Registered Successfully!</h3>
-        <p style="color: var(--text); margin-bottom: 4px; font-size: 13px;">Your API Key (Auto-filled below):</p>
-        <div id="keyDisplay" class="key-box"></div>
       </div>
+      <button class="btn" onclick="registerNode()">Register Node & Claim 20 Credits</button>
     </div>
 
-    <!-- SECTION 2: CAMPAIGN PUBLISHER -->
+    <!-- SECTION 2 -->
     <div class="card">
-      <h2>2. Publish Recommendation Campaign</h2>
-      <form id="campForm">
-        <label for="apiKey">Node API Key</label>
-        <input type="text" id="apiKey" placeholder="key_..." required />
-
-        <label for="campTitle">Campaign Title</label>
-        <input type="text" id="campTitle" placeholder="e.g. PromptDB Studio" required />
-
-        <label for="campDesc">Short Description</label>
-        <textarea id="campDesc" placeholder="Organize and optimize your AI prompts instantly." required></textarea>
-
-        <label for="targetUrl">Target URL</label>
-        <input type="url" id="targetUrl" placeholder="https://promptdb.ai" required />
-
-        <label for="ctaText">Button Text (CTA)</label>
-        <input type="text" id="ctaText" placeholder="Try Free" value="Learn More" required />
-
-        <button type="submit" class="btn btn-blue">Launch Campaign</button>
-      </form>
-
-      <div id="campResult" class="result" style="border-color: #388bfd;">
-        <h3 style="color: #58a6ff; margin-top:0; font-size: 15px;">Campaign Published & Live!</h3>
-        <p style="color: var(--text); margin-bottom: 4px; font-size: 13px;">Campaign ID:</p>
-        <div id="campDisplay" class="key-box" style="color: #58a6ff;"></div>
+      <h2>Section 2: Launch Campaign</h2>
+      <div class="form-group">
+        <label>Node API Key</label>
+        <input type="text" id="campApiKey" placeholder="key_..." />
       </div>
+      <div class="form-group">
+        <label>Campaign Title</label>
+        <input type="text" id="campTitle" placeholder="Awesome Product" />
+      </div>
+      <div class="form-group">
+        <label>Short Description</label>
+        <textarea id="campDesc" rows="2" placeholder="Describe your product..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Target URL</label>
+        <input type="text" id="campUrl" placeholder="https://example.com" />
+      </div>
+      <div class="form-group">
+        <label>Button Text (CTA)</label>
+        <input type="text" id="campCta" value="Visit Site →" />
+      </div>
+      <button class="btn" onclick="createCampaign()">Launch Campaign</button>
     </div>
 
-    <!-- SECTION 3: EMBED CODE GENERATOR -->
+    <!-- SECTION 3 -->
     <div class="card">
-      <h2>3. Copy Embed Widget Code</h2>
-      <p style="font-size: 13px; color: #8b949e;">Paste this snippet into your app HTML to display cross-promotions and earn credits.</p>
-      
-      <label for="embedApiKey">API Key for Snippet</label>
-      <input type="text" id="embedApiKey" placeholder="key_..." oninput="updateSnippet()" />
-
-      <label>Embed HTML Snippet</label>
-      <div id="snippetBox" class="key-box" style="color: #d2a8ff;"></div>
-      <button class="btn" style="background: var(--purple-accent);" onclick="copySnippet()">Copy Embed Code</button>
+      <h2>Section 3: Copy Embed Widget Code</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Paste this script tag into any site to display third-party recommendations:</p>
+      <code id="embedCode">// Complete Section 1 & 2 to generate your embed code</code>
     </div>
   </div>
 
-  <script>
-    const API_BASE = 'https://aen-backend-production-a6b2.up.railway.app';
+  <!-- DASHBOARD TAB -->
+  <div id="dashboard" class="tab-content">
+    <div class="grid-3">
+      <div class="stat-card">
+        <div class="stat-val" id="statNodes">0</div>
+        <div class="stat-label">Active Nodes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statCampaigns">0</div>
+        <div class="stat-label">Live Campaigns</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statTx">0</div>
+        <div class="stat-label">Credit Settlements</div>
+      </div>
+    </div>
 
-    // 1. Handle Registration
-    const regForm = document.getElementById('regForm');
-    const regResult = document.getElementById('regResult');
-    const keyDisplay = document.getElementById('keyDisplay');
-    const apiKeyInput = document.getElementById('apiKey');
-    const embedApiKeyInput = document.getElementById('embedApiKey');
+    <div class="card">
+      <h2>Node Balances</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Node App</th>
+            <th>Domain</th>
+            <th>Category</th>
+            <th>Credits</th>
+          </tr>
+        </thead>
+        <tbody id="nodeTableBody">
+          <tr><td colspan="4">Loading network nodes...</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-    regForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('appName').value;
-      const domain = document.getElementById('appDomain').value;
-      const category = document.getElementById('appCategory').value;
+    <div class="card">
+      <h2>Recent Credit Settlements</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Event ID</th>
+            <th>Publisher Node</th>
+            <th>Advertiser Node</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="txTableBody">
+          <tr><td colspan="4">No credit settlements recorded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-      try {
-        const res = await fetch(`${API_BASE}/v1/nodes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, domain, category })
-        });
-        const data = await res.json();
+</div>
 
-        if (res.ok) {
-          const key = data.node.apiKey;
-          keyDisplay.innerText = key;
-          apiKeyInput.value = key;
-          embedApiKeyInput.value = key;
-          updateSnippet();
-          regResult.style.display = 'block';
-        } else {
-          alert('Error: ' + (data.details || data.error));
-        }
-      } catch (err) {
-        alert('Network error. Failed to connect to server.');
-      }
-    });
-
-    // 2. Handle Campaign Submission
-    const campForm = document.getElementById('campForm');
-    const campResult = document.getElementById('campResult');
-    const campDisplay = document.getElementById('campDisplay');
-
-    campForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const apiKey = apiKeyInput.value;
-      const title = document.getElementById('campTitle').value;
-      const description = document.getElementById('campDesc').value;
-      const targetUrl = document.getElementById('targetUrl').value;
-      const ctaText = document.getElementById('ctaText').value;
-
-      try {
-        const res = await fetch(`${API_BASE}/v1/recommendations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ apiKey, title, description, targetUrl, ctaText })
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          campDisplay.innerText = data.recommendation.id;
-          campResult.style.display = 'block';
-        } else {
-          alert('Error: ' + (data.details || data.error));
-        }
-      } catch (err) {
-        alert('Network error. Failed to publish campaign.');
-      }
-    });
-
-    // 3. Generate Embed Snippet
-    function updateSnippet() {
-      const key = embedApiKeyInput.value || 'YOUR_API_KEY';
-      const snippet = `<!-- AEN Autonomous Recommendation Widget -->
-<div id="aen-widget"></div>
 <script>
-  (async function() {
-    const res = await fetch('${API_BASE}/v1/recommendation?apiKey=${key}');
-    if (!res.ok) return;
-    const data = await res.json();
-    document.getElementById('aen-widget').innerHTML = \`
-      <div style="border:1px solid #30363d;background:#161b22;padding:16px;border-radius:8px;max-width:320px;font-family:sans-serif;color:#c9d1d9;">
-        <span style="font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:1px;">Recommended</span>
-        <h4 style="margin:6px 0;color:#f0f6fc;">\${data.title}</h4>
-        <p style="font-size:12px;margin:0 0 12px 0;color:#8b949e;">\${data.description}</p>
-        <a href="\${data.targetUrl}" target="_blank" onclick="fetch('${API_BASE}/v1/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey:'${key}',recommendationId:'\${data.recommendationId}',advertiserNodeId:'\${data.advertiserNodeId}'})})" style="display:inline-block;background:#238636;color:#fff;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-weight:bold;">\${data.ctaText} &rarr;</a>
-      </div>\`;
-  })();
-<\/script>`;
-      document.getElementById('snippetBox').innerText = snippet;
-    }
+  const API_BASE = "https://aen-backend-production-a6b2.up.railway.app";
 
-    function copySnippet() {
-      const text = document.getElementById('snippetBox').innerText;
-      navigator.clipboard.writeText(text);
-      alert('Embed snippet copied to clipboard!');
-    }
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    if (el) el.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
 
-    // Initialize snippet on load
-    updateSnippet();
-  </script>
+    if (tabId === 'dashboard') {
+      fetchDashboard();
+    }
+  }
+
+  async function registerNode() {
+    const appName = document.getElementById('regAppName').value;
+    const domain = document.getElementById('regDomain').value;
+    const category = document.getElementById('regCategory').value;
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/node/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appName, domain, category })
+      });
+
+      const data = await res.json();
+      if (data.apiKey) {
+        document.getElementById('campApiKey').value = data.apiKey;
+        updateEmbedSnippet(data.apiKey);
+        alert(`Node registered successfully! API Key auto-filled into Section 2.`);
+      } else {
+        alert(data.error || "Registration failed");
+      }
+    } catch (err) {
+      alert("Network error registering node");
+    }
+  }
+
+  async function createCampaign() {
+    const apiKey = document.getElementById('campApiKey').value;
+    const title = document.getElementById('campTitle').value;
+    const description = document.getElementById('campDesc').value;
+    const targetUrl = document.getElementById('campUrl').value;
+    const ctaText = document.getElementById('campCta').value;
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/campaign/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey, title, description, targetUrl, ctaText })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        updateEmbedSnippet(apiKey);
+        alert("Campaign launched successfully!");
+      } else {
+        alert(data.error || "Campaign launch failed");
+      }
+    } catch (err) {
+      alert("Network error launching campaign");
+    }
+  }
+
+  function updateEmbedSnippet(apiKey) {
+    const snippet = `<div id="aen-widget"></div>\n<script>\n  (async function() {\n    const res = await fetch('${API_BASE}/v1/recommendation', { headers: { 'x-api-key': '${apiKey}' } });\n    const data = await res.json();\n    if (!data.recommendation) return;\n    const c = data.recommendation;\n    document.getElementById('aen-widget').innerHTML = \`\n      <div style="border:1px solid #38bdf8;padding:16px;border-radius:8px;background:#1e293b;color:#fff;font-family:sans-serif;">\n        <small style="color:#38bdf8;font-weight:bold;">RECOMMENDED</small>\n        <h3 style="margin:4px 0;">\${c.title}</h3>\n        <p style="margin:0 0 12px 0;color:#94a3b8;">\${c.description}</p>\n        <button onclick="aenClick()" style="background:#38bdf8;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-weight:bold;">\${c.ctaText || 'Visit →'}</button>\n      </div>\`;\n    window.aenClick = async () => {\n      await fetch('${API_BASE}/v1/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: '${apiKey}', campaignId: c.campaignId }) });\n      window.open(c.targetUrl, '_blank');\n    };\n  })();\n<\/script>`;
+    document.getElementById('embedCode').textContent = snippet;
+  }
+
+  async function fetchDashboard() {
+    try {
+      const res = await fetch(`${API_BASE}/v1/dashboard`);
+      const data = await res.json();
+
+      document.getElementById('statNodes').textContent = data.summary ? data.summary.totalNodes : 0;
+      document.getElementById('statCampaigns').textContent = data.summary ? data.summary.totalCampaigns : 0;
+      document.getElementById('statTx').textContent = data.summary ? data.summary.totalTransactions : 0;
+
+      const nodesList = data.nodes || [];
+      const nodeRows = nodesList.map(n => `
+        <tr>
+          <td><b>${n.appName}</b></td>
+          <td>${n.domain}</td>
+          <td>${n.category}</td>
+          <td style="color:#38bdf8;font-weight:bold;">${n.credits}</td>
+        </tr>
+      `).join('');
+      document.getElementById('nodeTableBody').innerHTML = nodeRows || '<tr><td colspan="4">No nodes registered.</td></tr>';
+
+      const eventsList = data.recentEvents || [];
+      const txRows = eventsList.map(e => `
+        <tr>
+          <td><code>${e.eventId}</code></td>
+          <td>${e.publisherNodeId}</td>
+          <td>${e.advertiserNodeId}</td>
+          <td>${new Date(e.timestamp).toLocaleTimeString()}</td>
+        </tr>
+      `).join('');
+      document.getElementById('txTableBody').innerHTML = txRows || '<tr><td colspan="4">No credit settlements recorded yet.</td></tr>';
+    } catch (err) {
+      console.error("Dashboard fetch error:", err);
+    }
+  }
+</script>
+
 </body>
 </html>
