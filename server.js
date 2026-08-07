@@ -119,7 +119,6 @@ app.get('/v1/recommendation', (req, res) => {
 // 5. Click conversion endpoint (Protected by Click Rate Limiter)
 app.post('/v1/event', clickRateLimiter, (req, res) => {
   const { apiKey } = req.body;
-  // Accepts either campaignId or recommendationId payload formats
   const campaignId = req.body.campaignId || req.body.recommendationId;
 
   const publisherNode = Object.values(nodes).find(n => n.apiKey === apiKey);
@@ -153,6 +152,30 @@ app.post('/v1/event', clickRateLimiter, (req, res) => {
     success: true,
     message: "Credit transfer settled",
     publisherCredits: publisherNode.credits
+  });
+});
+
+// 6. Live network dashboard endpoint
+app.get('/v1/dashboard', (req, res) => {
+  const nodeList = Object.values(nodes).map(node => ({
+    nodeId: node.nodeId,
+    appName: node.appName,
+    domain: node.domain,
+    category: node.category,
+    credits: node.credits,
+    registeredAt: node.registeredAt
+  }));
+
+  return res.status(200).json({
+    timestamp: new Date().toISOString(),
+    summary: {
+      totalNodes: nodeList.length,
+      totalCampaigns: campaigns.length,
+      totalTransactions: events.length
+    },
+    nodes: nodeList,
+    campaigns: campaigns,
+    recentEvents: events.slice(-50).reverse()
   });
 });
 
