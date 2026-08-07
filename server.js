@@ -12,26 +12,27 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// 1. Health check
+// 1. Health check route
 app.get('/', (req, res) => {
   res.json({ status: 'online', network: 'AEN Autonomous Distribution Network v1.0' });
 });
 
 // 2. Register a new builder app node
 app.post('/v1/nodes', async (req, res) => {
-  const { name } = req.body;
+  const { name, domain } = req.body;
   if (!name) return res.status(400).json({ error: 'Missing node/app name' });
 
   try {
-    const nodeId = crypto.randomUUID(); // Generates a valid PostgreSQL UUID
+    const nodeId = crypto.randomUUID();
     const apiKey = 'key_' + crypto.randomBytes(12).toString('hex');
     const starterCredits = 20.0000;
+    const nodeDomain = domain || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
 
     const result = await pool.query(
-      `INSERT INTO nodes (id, name, api_key, credit_balance) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING id, name, api_key AS "apiKey", credit_balance AS "creditBalance"`,
-      [nodeId, name, apiKey, starterCredits]
+      `INSERT INTO nodes (id, name, domain, api_key, credit_balance) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING id, name, domain, api_key AS "apiKey", credit_balance AS "creditBalance"`,
+      [nodeId, name, nodeDomain, apiKey, starterCredits]
     );
 
     res.status(201).json({
@@ -43,7 +44,6 @@ app.post('/v1/nodes', async (req, res) => {
     res.status(500).json({ error: 'Failed to register app node', details: err.message });
   }
 });
-
 
 // 3. Publish a new recommendation campaign
 app.post('/v1/recommendations', async (req, res) => {
@@ -71,8 +71,8 @@ app.post('/v1/recommendations', async (req, res) => {
       recommendation: result.rows[0]
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to publish recommendation' });
+    console.error('Campaign Error:', err);
+    res.status(500).json({ error: 'Failed to publish recommendation', details: err.message });
   }
 });
 
@@ -105,7 +105,7 @@ app.get('/v1/recommendation', async (req, res) => {
 
     res.json(recRes.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Recommendation Error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -140,8 +140,8 @@ app.post('/v1/event', async (req, res) => {
 
     res.json({ success: true, qualified: isQualified });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to record event' });
+    console.error('Event Error:', err);
+    res.status(500).json({ error: 'Failed to record event', details: err.message });
   }
 });
 
