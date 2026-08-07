@@ -60,7 +60,16 @@ const isValidUrl = (string) => {
 // Database Initialisation
 async function initDb() {
   const client = await pool.connect();
+
   try {
+    // Reset database tables during initial development setup
+    // Remove these DROP statements after the first successful deployment
+    await client.query(`
+      DROP TABLE IF EXISTS click_tokens CASCADE;
+      DROP TABLE IF EXISTS campaigns CASCADE;
+      DROP TABLE IF EXISTS nodes CASCADE;
+    `);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS nodes (
         id SERIAL PRIMARY KEY,
@@ -74,7 +83,7 @@ async function initDb() {
 
       CREATE TABLE IF NOT EXISTS campaigns (
         id SERIAL PRIMARY KEY,
-        node_id INT REFERENCES nodes(id) ON DELETE CASCADE,
+        node_id INT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
         title VARCHAR(100) NOT NULL,
         description VARCHAR(280) NOT NULL,
         target_url TEXT NOT NULL,
@@ -85,11 +94,29 @@ async function initDb() {
 
       CREATE TABLE IF NOT EXISTS click_tokens (
         token VARCHAR(64) PRIMARY KEY,
-        publisher_node_id INT REFERENCES nodes(id) ON DELETE CASCADE,
-        campaign_id INT REFERENCES campaigns(id) ON DELETE CASCADE,
+        publisher_node_id INT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+        campaign_id INT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
         is_used BOOLEAN DEFAULT false,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
+
+      CREATE INDEX IF NOT EXISTS idx_click_tokens_created_at
+      ON click_tokens(created_at);
+
+      CREATE INDEX IF NOT EXISTS idx_campaigns_node_id
+      ON campaigns(node_id);
+    `);
+
+    console.log('Database tables verified successfully.');
+
+  } catch (err) {
+    console.error('Database init error:', err);
+    process.exit(1);
+
+  } finally {
+    client.release();
+  }
+}
 
       CREATE INDEX IF NOT EXISTS idx_click_tokens_created_at ON click_tokens(created_at);
       CREATE INDEX IF NOT EXISTS idx_campaigns_node_id ON campaigns(node_id);
