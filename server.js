@@ -1,228 +1,95 @@
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: { rejectUnauthorized: false }
 });
 
+// 1. Root Status Endpoint
+app.get('/', (req, res) => {
+  res.json({ status: 'online', network: 'AEN Autonomous Distribution Network v1.0' });
+});
+
+// 2. Serve Recommendations
 app.get('/v1/recommendation', async (req, res) => {
+  const { apiKey } = req.query;
+  if (!apiKey) return res.status(400).json({ error: 'Missing apiKey' });
+
   try {
-    const { apiKey } = req.query;
+    const publisherRes = await pool.query('SELECT id FROM nodes WHERE api_key = $1', [apiKey]);
+    if (publisherRes.rows.length === 0) return res.status(401).json({ error: 'Invalid API Key' });
+    const publisherId = publisherRes.rows[0].id;
 
-    const pubRes = await pool.query(
-      'SELECT * FROM nodes WHERE api_key = $1',
-      [apiKey]
-    );
-
-    if (pubRes.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid API Key' });
-    }
-
-    const publisher = pubRes.rows[0];
-
-    const recQuery = `
+    const recRes = await pool.query(`
       SELECT 
-        r.id,
+        r.id AS "recommendationId",
+        r.node_id AS "advertiserNodeId",
         r.title,
         r.description,
-        r.target_url,
-        r.cta_text,
-        n.id AS advertiser_node_id
+        r.target_url AS "targetUrl",
+        r.cta_text AS "ctaText"
       FROM recommendations r
       JOIN nodes n ON r.node_id = n.id
-      WHERE n.id != $1
-        AND n.credit_balance > 0
-        AND r.is_active = TRUE
-      ORDER BY n.distribution_score DESC, RANDOM()
-      LIMIT 1;
-    `;
+      WHERE r.node_id != $1 AND r.is_active = true AND n.credit_balance > 0
+      ORDER BY RANDOM()
+      LIMIT 1
+    `, [publisherId]);
 
-    const recRes = await pool.query(recQuery, [publisher.id]);
+    if (recRes.rows.length === 0) return res.status(404).json({ error: 'No active recommendations available' });
 
-    if (recRes.rows.length === 0) {
-      return res.status(404).json({
-        error: 'No available recommendations'
-      });
-    }
-
-    const rec = recRes.rows[0];
-
-    res.json({
-      recommendationId: rec.id,
-      advertiserNodeId: rec.advertiser_node_id,
-      title: rec.title,
-      description: rec.description,
-      targetUrl: rec.target_url,
-      ctaText: rec.cta_text
-    });
-
+    res.json(recRes.rows[0]);
   } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-app.post('/v1/qau/verify', async (req, res) => {
-
-  const client = await pool.connect();
+// 3. Qualified Attention Unit (QAU) Tracking & Settlement
+app.post('/v1/event', async (req, res) => {
+  const { apiKey, recommendationId, advertiserNodeId, dwellSeconds, visitorHash } = req.body;
+  if (!apiKey || !recommendationId || !advertiserNodeId) {
+    return res.status(400).json({ error: 'Missing required parameters' });
+  }
 
   try {
+    const pubRes = await pool.query('SELECT id FROM nodes WHERE api_key = $1', [apiKey]);
+    if (pubRes.rows.length === 0) return res.status(401).json({ error: 'Invalid API Key' });
+    const publisherNodeId = pubRes.rows[0].id;
 
-    const {
-      apiKey,
-      recommendationId,
-      advertiserNodeId,
-      dwellTime,
-      visitorIp,
-      userAgent
-    } = req.body;
+    // 3+ seconds of active dwell time qualifies as 1 QAU
+    const isQualified = (dwellSeconds >= 3);
 
-
-    const pubRes = await client.query(
-      'SELECT id FROM nodes WHERE api_key = $1',
-      [apiKey]
-    );
-
-
-    if (pubRes.rows.length === 0) {
-      return res.status(401).json({
-        error: 'Unauthorized'
-      });
-    }
-
-
-    const publisherId = pubRes.rows[0].id;
-
-
-    if (dwellTime < 30) {
-      return res.status(400).json({
-        status: 'Ignored',
-        reason: 'Dwell time under 30 seconds'
-      });
-    }
-
-
-    const visitorHash = crypto
-      .createHash('sha256')
-      .update(`${visitorIp || 'unknown'}-${userAgent || 'unknown'}`)
-      .digest('hex');
-
-
-    await client.query('BEGIN');
-
-
-    const qauRes = await client.query(
-      `
-      INSERT INTO qau_events
-      (
-        publisher_node_id,
-        advertiser_node_id,
-        recommendation_id,
-        visitor_hash,
-        dwell_seconds,
-        is_qualified
-      )
-
-      VALUES ($1,$2,$3,$4,$5,TRUE)
-
+    const eventRes = await pool.query(`
+      INSERT INTO qau_events (publisher_node_id, advertiser_node_id, recommendation_id, visitor_hash, dwell_seconds, is_qualified)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id
-      `,
-      [
-        publisherId,
-        advertiserNodeId,
-        recommendationId,
-        visitorHash,
-        dwellTime
-      ]
-    );
+    `, [publisherNodeId, advertiserNodeId, recommendationId, visitorHash || 'anon_visitor', dwellSeconds || 0, isQualified]);
 
+    if (isQualified) {
+      const qauAmount = 1.0000;
+      // Deduct credit from advertiser node
+      await pool.query('UPDATE nodes SET credit_balance = credit_balance - $1 WHERE id = $2', [qauAmount, advertiserNodeId]);
+      // Add credit to publisher node
+      await pool.query('UPDATE nodes SET credit_balance = credit_balance + $1 WHERE id = $2', [qauAmount, publisherNodeId]);
+      // Log ledger entry
+      await pool.query(`
+        INSERT INTO credit_ledger (from_node_id, to_node_id, qau_event_id, amount, transaction_type)
+        VALUES ($1, $2, $3, $4, 'QAU_EARNED')
+      `, [advertiserNodeId, publisherNodeId, eventRes.rows[0].id, qauAmount]);
+    }
 
-    const qauEventId = qauRes.rows[0].id;
-
-
-    await client.query(
-      `
-      UPDATE nodes
-      SET credit_balance = credit_balance - 1.0
-      WHERE id = $1
-      `,
-      [advertiserNodeId]
-    );
-
-
-    await client.query(
-      `
-      UPDATE nodes
-      SET credit_balance = credit_balance + 1.0
-      WHERE id = $1
-      `,
-      [publisherId]
-    );
-
-
-    await client.query(
-      `
-      INSERT INTO credit_ledger
-      (
-        from_node_id,
-        to_node_id,
-        qau_event_id,
-        amount,
-        transaction_type
-      )
-
-      VALUES ($1,$2,$3,1.0,'QAU_EARNED')
-      `,
-      [
-        advertiserNodeId,
-        publisherId,
-        qauEventId
-      ]
-    );
-
-
-    await client.query('COMMIT');
-
-
-    res.json({
-      status: 'Success',
-      message: 'Credit Transferred'
-    });
-
-
+    res.json({ success: true, qualified: isQualified });
   } catch (err) {
-
-    await client.query('ROLLBACK');
-
-    res.status(500).json({
-      error: err.message
-    });
-
-
-  } finally {
-
-    client.release();
-
+    console.error(err);
+    res.status(500).json({ error: 'Failed to record event' });
   }
-
 });
-
 
 const PORT = process.env.PORT || 3000;
-
-
-app.listen(PORT, () => {
-  console.log(`Server live on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
