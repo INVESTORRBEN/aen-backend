@@ -3,6 +3,10 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+// Required on Railway so express-rate-limit gets the real client IP
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.json());
 
@@ -11,7 +15,7 @@ const nodes = {};
 const campaigns = [];
 const events = [];
 
-// Rate Limiter: Max 5 click events per IP every 15 minutes
+// Rate Limiter: Max 5 click events per real IP every 15 minutes
 const clickRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -25,7 +29,11 @@ const clickRateLimiter = rateLimit({
 
 // 1. Health check endpoint
 app.get('/', (req, res) => {
-  res.json({ status: "AEN Backend Operational", nodesCount: Object.keys(nodes).length, activeCampaigns: campaigns.length });
+  res.json({ 
+    status: "AEN Backend Operational", 
+    nodesCount: Object.keys(nodes).length, 
+    activeCampaigns: campaigns.length 
+  });
 });
 
 // 2. Node registration endpoint
@@ -84,7 +92,7 @@ app.post('/v1/campaign/create', (req, res) => {
   return res.status(201).json({ success: true, campaign: newCampaign });
 });
 
-// 4. Recommendation ad fetch endpoint (Unthrottled for high speed)
+// 4. Recommendation ad fetch endpoint
 app.get('/v1/recommendation', (req, res) => {
   const apiKey = req.headers['x-api-key'] || req.query.apiKey;
   const publisherNode = Object.values(nodes).find(n => n.apiKey === apiKey);
@@ -110,7 +118,9 @@ app.get('/v1/recommendation', (req, res) => {
 
 // 5. Click conversion endpoint (Protected by Click Rate Limiter)
 app.post('/v1/event', clickRateLimiter, (req, res) => {
-  const { apiKey, campaignId } = req.body;
+  const { apiKey } = req.body;
+  // Accepts either campaignId or recommendationId payload formats
+  const campaignId = req.body.campaignId || req.body.recommendationId;
 
   const publisherNode = Object.values(nodes).find(n => n.apiKey === apiKey);
   if (!publisherNode) {
