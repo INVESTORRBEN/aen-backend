@@ -23,14 +23,15 @@ app.post('/v1/nodes', async (req, res) => {
   if (!name) return res.status(400).json({ error: 'Missing node/app name' });
 
   try {
+    const nodeId = crypto.randomUUID(); // Generates a valid PostgreSQL UUID
     const apiKey = 'key_' + crypto.randomBytes(12).toString('hex');
     const starterCredits = 20.0000;
 
     const result = await pool.query(
-      `INSERT INTO nodes (name, api_key, credit_balance) 
-       VALUES ($1, $2, $3) 
+      `INSERT INTO nodes (id, name, api_key, credit_balance) 
+       VALUES ($1, $2, $3, $4) 
        RETURNING id, name, api_key AS "apiKey", credit_balance AS "creditBalance"`,
-      [name, apiKey, starterCredits]
+      [nodeId, name, apiKey, starterCredits]
     );
 
     res.status(201).json({
@@ -38,10 +39,11 @@ app.post('/v1/nodes', async (req, res) => {
       node: result.rows[0]
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to register app node' });
+    console.error('Registration Error:', err);
+    res.status(500).json({ error: 'Failed to register app node', details: err.message });
   }
 });
+
 
 // 3. Publish a new recommendation campaign
 app.post('/v1/recommendations', async (req, res) => {
