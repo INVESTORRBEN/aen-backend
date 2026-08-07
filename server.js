@@ -2,274 +2,479 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const app = express();
 
-app.set('trust proxy', 1);
-app.use(cors());
-app.use(express.json());
+// -------------------- Environment Configuration --------------------
+const {
+  PORT = 3000,
+  DATABASE_URL,
+  JWT_SECRET,
+  FREE_CREDITS = 20,
+  TOKEN_TTL_MINUTES = 10,
+  WIDGET_JWT_EXPIRY = '7d',
+  RATE_LIMIT_REC_PER_NODE = 60,     // requests per minute
+  RATE_LIMIT_CLICK_PER_NODE = 10,   // requests per 15 minutes
+  CORS_ORIGIN = '*'
+} = process.env;
 
-// Initialize PostgreSQL Connection Pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
-});
-
-// Auto-create database schema on startup
-async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS nodes (
-      node_id TEXT PRIMARY KEY,
-      api_key TEXT UNIQUE NOT NULL,
-      app_name TEXT NOT NULL,
-      domain TEXT NOT NULL,
-      category TEXT NOT NULL,
-      credits INT NOT NULL DEFAULT 20,
-      registered_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS campaigns (
-      campaign_id TEXT PRIMARY KEY,
-      node_id TEXT REFERENCES nodes(node_id),
-      title TEXT NOT NULL,
-      description TEXT,
-      target_url TEXT NOT NULL,
-      cta_text TEXT DEFAULT 'Learn More',
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS events (
-      event_id TEXT PRIMARY KEY,
-      publisher_node_id TEXT REFERENCES nodes(node_id),
-      advertiser_node_id TEXT REFERENCES nodes(node_id),
-      campaign_id TEXT REFERENCES campaigns(campaign_id),
-      timestamp TIMESTAMPTZ DEFAULT NOW()
-    );
-  `);
-  console.log("PostgreSQL Database tables verified & ready.");
+if (!DATABASE_URL) {
+  console.error('FATAL: DATABASE_URL environment variable is missing.');
+  process.exit(1);
+}
+if (!JWT_SECRET || JWT_SECRET === 'fallback-dev-secret-change-in-production') {
+  console.warn('WARNING: JWT_SECRET is not set or using default. Use a strong secret in production.');
 }
 
-initDb().catch(err => console.error("Database initialization error:", err));
+app.set('trust proxy', 1);
+app.use(express.json({ limit: '10kb' }));
+app.use(cors({
+  origin: CORS_ORIGIN,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-api-key', 'x-widget-token', 'Authorization']
+}));
 
-// Rate Limiter: Max 5 click events per real IP every 15 minutes
-const clickRateLimiter = rateLimit({
+// -------------------- Database Setup --------------------
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+});
+
+// Input validators
+const isValidDomain = (domain) => {
+  const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+  return domainRegex.test(domain);
+};
+
+const isValidUrl = (string) => {
+  try {
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+};
+
+// Database Initialisation
+async function initDb() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS nodes (
+        id SERIAL PRIMARY KEY,
+        app_name VARCHAR(60) NOT NULL,
+        domain VARCHAR(255) UNIQUE NOT NULL,
+        category VARCHAR(50) NOT NULL,
+        api_key VARCHAR(64) UNIQUE NOT NULL,
+        credits INT NOT NULL DEFAULT ${parseInt(FREE_CREDITS)},
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS campaigns (
+        id SERIAL PRIMARY KEY,
+        node_id INT REFERENCES nodes(id) ON DELETE CASCADE,
+        title VARCHAR(100) NOT NULL,
+        description VARCHAR(280) NOT NULL,
+        target_url TEXT NOT NULL,
+        cta_text VARCHAR(30) DEFAULT 'Visit →',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS click_tokens (
+        token VARCHAR(64) PRIMARY KEY,
+        publisher_node_id INT REFERENCES nodes(id) ON DELETE CASCADE,
+        campaign_id INT REFERENCES campaigns(id) ON DELETE CASCADE,
+        is_used BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_click_tokens_created_at ON click_tokens(created_at);
+      CREATE INDEX IF NOT EXISTS idx_campaigns_node_id ON campaigns(node_id);
+    `);
+    console.log('Database tables verified.');
+  } catch (err) {
+    console.error('Database init error:', err);
+    process.exit(1);
+  } finally {
+    client.release();
+  }
+}
+initDb();
+
+// Background cleanup of old click tokens (preserves used tokens for 24 hours for dashboard audit)
+setInterval(async () => {
+  try {
+    const res = await pool.query(
+      `DELETE FROM click_tokens
+       WHERE (is_used = true AND created_at < NOW() - INTERVAL '24 hours')
+          OR (is_used = false AND created_at < NOW() - INTERVAL '${TOKEN_TTL_MINUTES} minutes')`
+    );
+    if (res.rowCount > 0) console.log(`Cleaned up ${res.rowCount} expired/old tokens.`);
+  } catch (err) {
+    console.error('Token cleanup error:', err);
+  }
+}, 5 * 60 * 1000); // every 5 minutes
+
+// -------------------- Rate Limiters --------------------
+// Global limiter
+const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    error: "Too many clicks from this IP. Credit settlement throttled."
-  }
+  max: 100,
+  message: { error: 'Too many requests, please try again later.' }
 });
+app.use(globalLimiter);
 
-// 1. Health check endpoint
-app.get('/', async (req, res) => {
+// Per‑node rate limiting (in‑memory store)
+const nodeRateLimitStore = {};
+function nodeRateLimiter(windowMs, max, message) {
+  return (req, res, next) => {
+    const nodeId = req.node?.id || req.publisherNodeId;
+    if (!nodeId) return next();
+    const key = `node:${nodeId}:${windowMs}`;
+    const now = Date.now();
+    if (!nodeRateLimitStore[key]) {
+      nodeRateLimitStore[key] = { count: 0, resetTime: now + windowMs };
+    }
+    const record = nodeRateLimitStore[key];
+    if (now > record.resetTime) {
+      record.count = 0;
+      record.resetTime = now + windowMs;
+    }
+    record.count++;
+    if (record.count > max) {
+      return res.status(429).json({ error: message || 'Node rate limit exceeded.' });
+    }
+    next();
+  };
+}
+
+// -------------------- Authentication Middleware --------------------
+// For API key
+async function authenticateApiKey(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey) {
+    return res.status(401).json({ error: 'Missing x-api-key header' });
+  }
   try {
-    const nodesCount = await pool.query('SELECT COUNT(*) FROM nodes');
-    const campaignsCount = await pool.query('SELECT COUNT(*) FROM campaigns');
-    res.json({ 
-      status: "AEN Backend Operational (PostgreSQL Persistent Storage)", 
-      nodesCount: parseInt(nodesCount.rows[0].count), 
-      activeCampaigns: parseInt(campaignsCount.rows[0].count) 
-    });
+    const result = await pool.query('SELECT * FROM nodes WHERE api_key = $1', [apiKey]);
+    if (result.rows.length === 0) {
+      return res.status(403).json({ error: 'Invalid API Key' });
+    }
+    req.node = result.rows[0];
+    next();
   } catch (err) {
-    res.status(500).json({ error: "Health check error" });
+    console.error('Auth Middleware Error:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-});
+}
 
-// 2. Node registration endpoint
+// For JWT widget token
+function authenticateWidgetToken(req, res, next) {
+  const widgetToken = req.headers['x-widget-token'] || req.headers['authorization']?.replace('Bearer ', '');
+  if (!widgetToken) {
+    return res.status(401).json({ error: 'Missing x-widget-token header' });
+  }
+  try {
+    const decoded = jwt.verify(widgetToken, JWT_SECRET);
+    req.publisherNodeId = decoded.nodeId;
+    req.nodeDomain = decoded.domain;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired widget token' });
+  }
+}
+
+// -------------------- API Endpoints --------------------
+
+// 1. Register Node
 app.post('/v1/node/register', async (req, res) => {
-  const { appName, domain, category } = req.body || {};
-  if (!appName || !domain) {
-    return res.status(400).json({ error: "Missing required fields: appName, domain" });
+  let { appName, domain, category } = req.body;
+  if (!appName || !domain || !category) {
+    return res.status(400).json({ error: 'appName, domain, and category are required' });
   }
 
-  const nodeId = 'node_' + Math.random().toString(36).substr(2, 9);
-  const apiKey = 'key_' + Math.random().toString(36).substr(2, 16) + Math.random().toString(36).substr(2, 8);
+  appName = String(appName).trim().slice(0, 60);
+  let cleanDomain = String(domain).trim().toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/\/.*$/, '').slice(0, 255);
+  category = String(category).trim().slice(0, 50);
+
+  if (!isValidDomain(cleanDomain)) {
+    return res.status(400).json({ error: 'Invalid domain format. Example: myapp.com' });
+  }
+
+  const apiKey = 'aen_live_' + crypto.randomBytes(16).toString('hex');
 
   try {
-    await pool.query(
-      `INSERT INTO nodes (node_id, api_key, app_name, domain, category, credits) VALUES ($1, $2, $3, $4, $5, $6)`,
-      [nodeId, apiKey, appName.trim(), domain.trim(), category || 'General', 20]
+    const result = await pool.query(
+      `INSERT INTO nodes (app_name, domain, category, api_key, credits)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, app_name AS "appName", domain, category, api_key AS "apiKey", credits`,
+      [appName, cleanDomain, category, apiKey, parseInt(FREE_CREDITS)]
     );
-
-    return res.status(201).json({ success: true, nodeId, apiKey, credits: 20 });
-  } catch (err) {
-    console.error("Register Error:", err);
-    return res.status(500).json({ error: "Database error registering node" });
-  }
-});
-
-// 3. Launch campaign endpoint
-app.post('/v1/campaign/create', async (req, res) => {
-  const { apiKey, title, description, targetUrl, ctaText } = req.body || {};
-  
-  if (!apiKey || !title || !targetUrl) {
-    return res.status(400).json({ error: "Missing required campaign fields" });
-  }
-
-  try {
-    const nodeRes = await pool.query(`SELECT * FROM nodes WHERE api_key = $1`, [apiKey]);
-    if (nodeRes.rows.length === 0) {
-      return res.status(401).json({ error: "Invalid API key" });
-    }
-    const node = nodeRes.rows[0];
-
-    if (node.credits < 1) {
-      return res.status(403).json({ error: "Insufficient credits to launch campaign" });
-    }
-
-    let formattedUrl = targetUrl.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = 'https://' + formattedUrl;
-    }
-
-    const campaignId = 'camp_' + Math.random().toString(36).substr(2, 9);
-    await pool.query(
-      `INSERT INTO campaigns (campaign_id, node_id, title, description, target_url, cta_text) VALUES ($1, $2, $3, $4, $5, $6)`,
-      [campaignId, node.node_id, title.trim(), (description || '').trim(), formattedUrl, (ctaText || "Learn More").trim()]
-    );
-
-    return res.status(201).json({
-      success: true,
-      campaign: { campaignId, nodeId: node.node_id, title, description, targetUrl: formattedUrl, ctaText }
+    res.status(201).json({
+      message: 'Node registered successfully',
+      ...result.rows[0]
     });
   } catch (err) {
-    console.error("Campaign Create Error:", err);
-    return res.status(500).json({ error: "Database error launching campaign" });
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Domain is already registered in the network' });
+    }
+    console.error('Register Node Error:', err);
+    res.status(500).json({ error: 'Failed to register node' });
   }
 });
 
-// 4. Recommendation ad fetch endpoint
-app.get('/v1/recommendation', async (req, res) => {
-  const apiKey = req.headers['x-api-key'] || req.query.apiKey;
-
+// 2. Issue Widget Token (uses API key)
+app.post('/v1/widget/token', async (req, res) => {
+  const { apiKey } = req.body;
+  if (!apiKey) {
+    return res.status(400).json({ error: 'apiKey is required' });
+  }
   try {
-    const pubRes = await pool.query(`SELECT * FROM nodes WHERE api_key = $1`, [apiKey]);
-    if (pubRes.rows.length === 0) {
-      return res.status(401).json({ error: "Invalid API key" });
+    const result = await pool.query('SELECT id, domain FROM nodes WHERE api_key = $1', [apiKey]);
+    if (result.rows.length === 0) {
+      return res.status(403).json({ error: 'Invalid API Key' });
     }
-    const publisherNode = pubRes.rows[0];
-
-    // Fetch active third-party campaigns where advertiser has credits >= 1
-    const campRes = await pool.query(`
-      SELECT c.* 
-      FROM campaigns c
-      JOIN nodes n ON c.node_id = n.node_id
-      WHERE c.node_id != $1 AND n.credits >= 1
-    `, [publisherNode.node_id]);
-
-    if (campRes.rows.length === 0) {
-      return res.status(200).json({ recommendation: null, message: "No active third-party campaigns available." });
-    }
-
-    const selected = campRes.rows[Math.floor(Math.random() * campRes.rows.length)];
-    return res.status(200).json({
-      recommendation: {
-        campaignId: selected.campaign_id,
-        nodeId: selected.node_id,
-        title: selected.title,
-        description: selected.description,
-        targetUrl: selected.target_url,
-        ctaText: selected.cta_text
-      }
-    });
+    const node = result.rows[0];
+    const token = jwt.sign(
+      { nodeId: node.id, domain: node.domain },
+      JWT_SECRET,
+      { expiresIn: WIDGET_JWT_EXPIRY }
+    );
+    res.json({ token });
   } catch (err) {
-    console.error("Recommendation Fetch Error:", err);
-    return res.status(500).json({ error: "Database error fetching recommendation" });
+    console.error('Widget Token Error:', err);
+    res.status(500).json({ error: 'Failed to issue widget token' });
   }
 });
 
-// 5. Click conversion endpoint (Atomic Transaction)
-app.post('/v1/event', clickRateLimiter, async (req, res) => {
-  const body = req.body || {};
-  const apiKey = body.apiKey;
-  const campaignId = body.campaignId || body.recommendationId;
+// 3. Launch Campaign (deducts 1 credit upfront)
+app.post('/v1/campaign/create', authenticateApiKey, async (req, res) => {
+  let { title, description, targetUrl, ctaText } = req.body;
+  if (!title || !description || !targetUrl) {
+    return res.status(400).json({ error: 'title, description, and targetUrl are required' });
+  }
+  if (!isValidUrl(targetUrl)) {
+    return res.status(400).json({ error: 'Invalid targetUrl format. Must start with http:// or https://' });
+  }
+
+  title = String(title).trim().slice(0, 100);
+  description = String(description).trim().slice(0, 280);
+  ctaText = String(ctaText || 'Visit →').trim().slice(0, 30);
+
+  const node = req.node;
+  if (node.credits < 1) {
+    return res.status(403).json({ error: 'Insufficient credits to launch campaign (need 1 credit).' });
+  }
 
   const client = await pool.connect();
-
   try {
     await client.query('BEGIN');
 
-    const pubRes = await client.query(`SELECT * FROM nodes WHERE api_key = $1 FOR UPDATE`, [apiKey]);
-    if (pubRes.rows.length === 0) {
+    const updateRes = await client.query(
+      'UPDATE nodes SET credits = credits - 1 WHERE id = $1 AND credits > 0 RETURNING credits',
+      [node.id]
+    );
+    if (updateRes.rows.length === 0) {
       await client.query('ROLLBACK');
-      return res.status(401).json({ error: "Invalid API key" });
+      return res.status(400).json({ error: 'Failed to deduct credit. Insufficient balance.' });
     }
-    const publisherNode = pubRes.rows[0];
 
-    const campRes = await client.query(`SELECT * FROM campaigns WHERE campaign_id = $1`, [campaignId]);
-    if (campRes.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: "Campaign not found" });
-    }
-    const campaign = campRes.rows[0];
-
-    const advRes = await client.query(`SELECT * FROM nodes WHERE node_id = $1 FOR UPDATE`, [campaign.node_id]);
-    if (advRes.rows.length === 0 || advRes.rows[0].credits < 1) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: "Advertiser balance exhausted" });
-    }
-    const advertiserNode = advRes.rows[0];
-
-    // Atomically transfer 1 credit
-    await client.query(`UPDATE nodes SET credits = credits - 1 WHERE node_id = $1`, [advertiserNode.node_id]);
-    await client.query(`UPDATE nodes SET credits = credits + 1 WHERE node_id = $1`, [publisherNode.node_id]);
-
-    const eventId = 'evt_' + Math.random().toString(36).substr(2, 9);
-    await client.query(
-      `INSERT INTO events (event_id, publisher_node_id, advertiser_node_id, campaign_id) VALUES ($1, $2, $3, $4)`,
-      [eventId, publisherNode.node_id, advertiserNode.node_id, campaignId]
+    const campaignResult = await client.query(
+      `INSERT INTO campaigns (node_id, title, description, target_url, cta_text)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, title, description, target_url AS "targetUrl", cta_text AS "ctaText"`,
+      [node.id, title, description, targetUrl, ctaText]
     );
 
     await client.query('COMMIT');
-
-    return res.status(200).json({
-      success: true,
-      message: "Credit transfer settled",
-      publisherCredits: publisherNode.credits + 1
+    res.status(201).json({
+      message: 'Campaign launched successfully (1 credit deducted)',
+      campaign: campaignResult.rows[0],
+      remainingCredits: updateRes.rows[0].credits
     });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error("Event Settlement Error:", err);
-    return res.status(500).json({ error: "Database transaction failed" });
+    console.error('Create Campaign Error:', err);
+    res.status(500).json({ error: 'Failed to create campaign' });
   } finally {
     client.release();
   }
 });
 
-// 6. Live network dashboard endpoint
+// 4. Recommendation Engine
+app.get('/v1/recommendation',
+  authenticateWidgetToken,
+  nodeRateLimiter(60 * 1000, parseInt(RATE_LIMIT_REC_PER_NODE), 'Too many recommendation requests.'),
+  async (req, res) => {
+    const publisherNodeId = req.publisherNodeId;
+    const nodeDomain = req.nodeDomain;
+
+    const reqOrigin = req.headers['origin'] || req.headers['referer'] || '';
+    if (reqOrigin && !reqOrigin.includes('localhost') && !reqOrigin.includes('127.0.0.1')) {
+      if (!reqOrigin.includes(nodeDomain)) {
+        return res.status(403).json({ error: 'Domain origin mismatch. Widget token restricted to registered domain.' });
+      }
+    }
+
+    try {
+      const result = await pool.query(
+        `SELECT c.id, c.title, c.description, c.target_url, c.cta_text, c.node_id
+         FROM campaigns c
+         JOIN nodes n ON c.node_id = n.id
+         WHERE c.is_active = true
+           AND c.node_id != $1
+           AND n.credits > 0
+         ORDER BY RANDOM()
+         LIMIT 1`,
+        [publisherNodeId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.json({ recommendation: null });
+      }
+
+      const campaign = result.rows[0];
+      const clickToken = crypto.randomBytes(32).toString('hex');
+      await pool.query(
+        'INSERT INTO click_tokens (token, publisher_node_id, campaign_id) VALUES ($1, $2, $3)',
+        [clickToken, publisherNodeId, campaign.id]
+      );
+
+      res.json({
+        recommendation: {
+          title: campaign.title,
+          description: campaign.description,
+          targetUrl: campaign.target_url,
+          ctaText: campaign.cta_text,
+          clickToken: clickToken
+        }
+      });
+    } catch (err) {
+      console.error('Recommendation Error:', err);
+      res.status(500).json({ error: 'Failed to fetch recommendation' });
+    }
+  }
+);
+
+// 5. Atomic Credit Settlement
+app.post('/v1/event',
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: parseInt(RATE_LIMIT_CLICK_PER_NODE) || 10,
+    message: { error: 'Too many click events from this IP.' }
+  }),
+  async (req, res) => {
+    const { clickToken } = req.body;
+    if (!clickToken) {
+      return res.status(400).json({ error: 'clickToken is required' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Consume token: must be unused and within TTL
+      const tokenResult = await client.query(
+        `UPDATE click_tokens
+         SET is_used = true
+         WHERE token = $1
+           AND is_used = false
+           AND created_at >= NOW() - INTERVAL '${TOKEN_TTL_MINUTES} minutes'
+         RETURNING publisher_node_id, campaign_id`,
+        [clickToken]
+      );
+
+      if (tokenResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Invalid, used, or expired click token' });
+      }
+
+      const { publisher_node_id, campaign_id } = tokenResult.rows[0];
+
+      // Find advertiser node
+      const campaignRes = await client.query(
+        'SELECT node_id FROM campaigns WHERE id = $1',
+        [campaign_id]
+      );
+      if (campaignRes.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Campaign not found' });
+      }
+      const advertiserNodeId = campaignRes.rows[0].node_id;
+
+      // Deduct 1 credit from advertiser
+      const deductRes = await client.query(
+        'UPDATE nodes SET credits = credits - 1 WHERE id = $1 AND credits > 0 RETURNING credits',
+        [advertiserNodeId]
+      );
+      if (deductRes.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Advertiser has insufficient credits' });
+      }
+
+      // Add 1 credit to publisher
+      await client.query(
+        'UPDATE nodes SET credits = credits + 1 WHERE id = $1',
+        [publisher_node_id]
+      );
+
+      await client.query('COMMIT');
+      res.json({ message: 'Click settled successfully' });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      console.error('Event Settlement Error:', err);
+      res.status(500).json({ error: 'Failed to process event' });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+// 6. Node Balance
+app.get('/v1/node/balance', authenticateApiKey, async (req, res) => {
+  res.json({ credits: req.node.credits, nodeId: req.node.id });
+});
+
+// 7. Dashboard Data
 app.get('/v1/dashboard', async (req, res) => {
   try {
-    const nodesRes = await pool.query(
-      `SELECT node_id AS "nodeId", app_name AS "appName", domain, category, credits, registered_at AS "registeredAt" FROM nodes ORDER BY registered_at DESC`
+    const nodes = await pool.query(
+      `SELECT id, app_name AS "appName", domain, category, credits
+       FROM nodes ORDER BY created_at DESC`
     );
-    const campRes = await pool.query(
-      `SELECT campaign_id AS "campaignId", node_id AS "nodeId", title, description, target_url AS "targetUrl", cta_text AS "ctaText", created_at AS "createdAt" FROM campaigns ORDER BY created_at DESC`
+    const campaigns = await pool.query(
+      `SELECT id, title, description, target_url AS "targetUrl", cta_text AS "ctaText", is_active AS "isActive"
+       FROM campaigns ORDER BY created_at DESC LIMIT 50`
     );
-    const eventRes = await pool.query(
-      `SELECT event_id AS "eventId", publisher_node_id AS "publisherNodeId", advertiser_node_id AS "advertiserNodeId", campaign_id AS "campaignId", timestamp FROM events ORDER BY timestamp DESC LIMIT 50`
+    const events = await pool.query(
+      `SELECT token, publisher_node_id AS "publisherNodeId", campaign_id AS "campaignId", created_at AS "timestamp"
+       FROM click_tokens
+       WHERE is_used = true
+       ORDER BY created_at DESC
+       LIMIT 50`
     );
 
-    return res.status(200).json({
-      timestamp: new Date().toISOString(),
-      summary: {
-        totalNodes: nodesRes.rows.length,
-        totalCampaigns: campRes.rows.length,
-        totalTransactions: eventRes.rows.length
-      },
-      nodes: nodesRes.rows,
-      campaigns: campRes.rows,
-      recentEvents: eventRes.rows
+    res.json({
+      nodes: nodes.rows,
+      campaigns: campaigns.rows,
+      recentEvents: events.rows
     });
   } catch (err) {
-    console.error("Dashboard Fetch Error:", err);
-    return res.status(500).json({ error: "Database error fetching dashboard" });
+    console.error('Dashboard Error:', err);
+    res.status(500).json({ error: 'Failed to fetch dashboard data' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// 8. Health Check
+app.get('/', (req, res) => {
+  res.json({ status: 'AEN Backend Operational', timestamp: new Date().toISOString() });
+});
+
+// Start Server
 app.listen(PORT, () => {
-  console.log(`AEN Backend running on port ${PORT}`);
+  console.log(`AEN Secure Server running on port ${PORT}`);
 });
