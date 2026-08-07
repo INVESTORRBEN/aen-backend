@@ -12,11 +12,12 @@
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --border: #334155;
+      --danger: #ef4444;
       --success: #22c55e;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -25,28 +26,10 @@
       justify-content: center;
     }
 
-    .container {
-      max-width: 800px;
-      width: 100%;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    h1 {
-      margin: 0 0 8px 0;
-      color: var(--accent);
-    }
-
-    p.subtitle {
-      color: var(--text-muted);
-      margin: 0;
-      font-size: 0.95rem;
-    }
-
-    /* Workflow Progress Steps Bar */
+    .container { max-width: 800px; width: 100%; }
+    header { text-align: center; margin-bottom: 24px; }
+    h1 { color: var(--accent); margin: 0 0 8px 0; }
+    
     .progress-bar {
       display: flex;
       gap: 12px;
@@ -63,197 +46,78 @@
       padding-top: 8px;
       font-size: 0.85rem;
       color: var(--text-muted);
-      transition: all 0.3s ease;
+      transition: all 0.3s;
     }
 
-    .step-item.active {
-      border-top-color: var(--accent);
-      color: var(--text);
-    }
+    .step-item.active { border-top-color: var(--accent); color: var(--text); }
+    .step-item strong { display: block; color: var(--accent); font-size: 0.75rem; text-transform: uppercase; }
 
-    .step-item strong {
-      display: block;
-      color: var(--accent);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
-    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: var(--card-bg); padding: 6px; border-radius: 8px; }
+    .tab-btn { flex: 1; padding: 10px; background: transparent; border: none; color: var(--text-muted); font-weight: 600; cursor: pointer; border-radius: 6px; }
+    .tab-btn.active { background: var(--accent); color: #000; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-    .tabs {
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .card h2 { margin-top: 0; font-size: 1.15rem; color: var(--accent); }
+
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-muted); }
+    input, select, textarea { width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box; }
+    
+    button.btn { 
+      width: 100%; 
+      padding: 12px; 
+      background: var(--accent); 
+      color: #000; 
+      border: none; 
+      border-radius: 6px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+    }
+    button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.btn-secondary { background: #334155; color: #f8fafc; margin-top: 10px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    code { background: #000; padding: 12px; border-radius: 6px; display: block; white-space: pre-wrap; color: var(--accent); font-size: 0.8rem; border: 1px solid var(--border); word-break: break-all; }
+
+    /* Toast Notification Overlay */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
       display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      background: var(--card-bg);
-      padding: 6px;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      padding: 12px 20px;
       border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .tab-btn.active {
-      background: var(--accent);
-      color: #000;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .card h2 {
-      margin-top: 0;
-      font-size: 1.15rem;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .badge {
-      font-size: 0.7rem;
-      padding: 3px 8px;
-      border-radius: 12px;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background: #0f172a;
-      border: 1px solid var(--border);
-      padding: 16px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .stat-val {
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: var(--accent);
-    }
-
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-      color: var(--text-muted);
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      box-sizing: border-box;
       font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: fadeIn 0.3s ease-out;
     }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    button.btn {
-      width: 100%;
-      padding: 12px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button.btn:hover {
-      opacity: 0.9;
-    }
-
-    button.btn-secondary {
-      background: #334155;
-      color: #f8fafc;
-      margin-top: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      color: var(--text-muted);
-    }
-
-    code {
-      background: #000;
-      padding: 12px;
-      border-radius: 6px;
-      display: block;
-      white-space: pre-wrap;
-      word-break: break-all;
-      color: var(--accent);
-      font-size: 0.8rem;
-      border: 1px solid var(--border);
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
 
+<div id="toast-container"></div>
+
 <div class="container">
   <header>
     <h1>Autonomous Exchange Network</h1>
-    <p class="subtitle">Decentralized Cross-Promotion & Credit Ledger for Apps</p>
+    <p style="color: var(--text-muted);">Decentralized Cross-Promotion Ledger</p>
   </header>
 
   <div class="tabs">
@@ -261,39 +125,17 @@
     <button class="tab-btn" onclick="switchTab('dashboard', this)">Live Network Dashboard</button>
   </div>
 
-  <!-- PORTAL TAB -->
   <div id="portal" class="tab-content active">
-
-    <!-- Visual Onboarding Step Bar -->
     <div class="progress-bar">
-      <div class="step-item active" id="step1-indicator">
-        <strong>Step 1</strong>
-        Register App Node
-      </div>
-      <div class="step-item" id="step2-indicator">
-        <strong>Step 2</strong>
-        Launch Campaign
-      </div>
-      <div class="step-item" id="step3-indicator">
-        <strong>Step 3</strong>
-        Embed & Earn
-      </div>
+      <div class="step-item active" id="step1-indicator"><strong>Step 1</strong>Register App</div>
+      <div class="step-item" id="step2-indicator"><strong>Step 2</strong>Launch Campaign</div>
+      <div class="step-item" id="step3-indicator"><strong>Step 3</strong>Embed Widget</div>
     </div>
 
-    <!-- SECTION 1 -->
     <div class="card">
-      <h2>1. Register App Node <span class="badge">+20 Free Credits</span></h2>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-        Register your app as an active node on the network to generate an API key and claim welcome credits.
-      </p>
-      <div class="form-group">
-        <label>App / Product Name</label>
-        <input type="text" id="regAppName" placeholder="e.g., DevPulse AI" />
-      </div>
-      <div class="form-group">
-        <label>Domain</label>
-        <input type="text" id="regDomain" placeholder="e.g., devpulse.io" />
-      </div>
+      <h2>1. Register App Node</h2>
+      <div class="form-group"><label>App Name</label><input type="text" id="regAppName" placeholder="e.g., DevPulse AI" /></div>
+      <div class="form-group"><label>Domain</label><input type="text" id="regDomain" placeholder="e.g., devpulse.io" /></div>
       <div class="form-group">
         <label>Category</label>
         <select id="regCategory">
@@ -303,127 +145,71 @@
           <option value="General">General</option>
         </select>
       </div>
-      <button class="btn" onclick="registerNode()">Register Node & Claim 20 Credits</button>
+      <button class="btn" id="btnRegister" onclick="registerNode(this)">Register Node (+20 Credits)</button>
     </div>
 
-    <!-- SECTION 2 -->
     <div class="card">
-      <h2>2. Launch Campaign <span class="badge">Set Up Your Ad</span></h2>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-        Create the recommendation card other app nodes will display to drive high-intent users to your product.
-      </p>
-      <div class="form-group">
-        <label>Node API Key</label>
-        <input type="text" id="campApiKey" placeholder="Auto-fills upon Step 1 completion or paste existing key" />
-      </div>
-      <div class="form-group">
-        <label>Campaign Title</label>
-        <input type="text" id="campTitle" placeholder="e.g., Automated PR Code Reviews" />
-      </div>
-      <div class="form-group">
-        <label>Short Description</label>
-        <textarea id="campDesc" rows="2" placeholder="e.g., Catch bugs and enforce coding standards on every pull request automatically."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Target URL</label>
-        <input type="text" id="campUrl" placeholder="e.g., https://devpulse.io" />
-      </div>
-      <div class="form-group">
-        <label>Button Text (CTA)</label>
-        <input type="text" id="campCta" value="Try DevPulse →" />
-      </div>
-      <button class="btn" onclick="createCampaign()">Launch Campaign</button>
+      <h2>2. Launch Campaign</h2>
+      <div class="form-group"><label>Node API Key</label><input type="text" id="campApiKey" placeholder="Paste your key here" /></div>
+      <div class="form-group"><label>Campaign Title</label><input type="text" id="campTitle" placeholder="e.g., Automated Code Reviews" /></div>
+      <div class="form-group"><label>Description</label><textarea id="campDesc" rows="2" placeholder="Catch bugs on every PR automatically."></textarea></div>
+      <div class="form-group"><label>Target URL</label><input type="text" id="campUrl" placeholder="https://devpulse.io" /></div>
+      <div class="form-group"><label>Button Text (CTA)</label><input type="text" id="campCta" value="Try DevPulse →" /></div>
+      <button class="btn" id="btnCampaign" onclick="createCampaign(this)">Launch Campaign</button>
     </div>
 
-    <!-- SECTION 3 -->
     <div class="card">
-      <h2>3. Copy Embed Widget Code <span class="badge">Earn 1 Credit / Click</span></h2>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-        Paste this script tag into your app's footer or sidebar to display peer recommendations and earn credits.
-      </p>
+      <h2>3. Copy Embed Widget Code</h2>
       <code id="embedCode">// Complete Steps 1 & 2 above to auto-generate your live snippet</code>
       <button class="btn btn-secondary" id="copyBtn" onclick="copyEmbedCode()">Copy Code to Clipboard</button>
     </div>
   </div>
 
-  <!-- DASHBOARD TAB -->
   <div id="dashboard" class="tab-content">
-    <div class="grid-3">
-      <div class="stat-card">
-        <div class="stat-val" id="statNodes">0</div>
-        <div class="stat-label">Active Nodes</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" id="statCampaigns">0</div>
-        <div class="stat-label">Live Campaigns</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" id="statTx">0</div>
-        <div class="stat-label">Credit Settlements</div>
-      </div>
-    </div>
-
     <div class="card">
-      <h2>Node Balances</h2>
+      <h2>Active Network Nodes</h2>
       <table>
-        <thead>
-          <tr>
-            <th>Node App</th>
-            <th>Domain</th>
-            <th>Category</th>
-            <th>Credits</th>
-          </tr>
-        </thead>
-        <tbody id="nodeTableBody">
-          <tr><td colspan="4">Loading network nodes...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>Recent Credit Settlements</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Event ID</th>
-            <th>Publisher Node</th>
-            <th>Advertiser Node</th>
-            <th>Time</th>
-          </tr>
-        </thead>
-        <tbody id="txTableBody">
-          <tr><td colspan="4">No credit settlements recorded yet.</td></tr>
-        </tbody>
+        <thead><tr><th>Node App</th><th>Domain</th><th>Category</th><th>Credits</th></tr></thead>
+        <tbody id="nodeTableBody"><tr><td colspan="4">Loading network nodes...</td></tr></tbody>
       </table>
     </div>
   </div>
-
 </div>
 
 <script>
-  const API_BASE = "https://aen-backend-production-a6b2.up.railway.app";
+  // Build-time / Environment aware endpoint resolution
+  const API_BASE = (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL) 
+    ? process.env.VITE_API_URL 
+    : (window.location.origin.includes('localhost') 
+        ? 'http://localhost:3000' 
+        : 'https://aen-backend-production-a6b2.up.railway.app');
+
+  // Lightweight Toast System
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
 
   function switchTab(tabId, el) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    
     if (el) el.classList.add('active');
     document.getElementById(tabId).classList.add('active');
-
-    if (tabId === 'dashboard') {
-      fetchDashboard();
-    }
+    if (tabId === 'dashboard') fetchDashboard();
   }
 
-  async function registerNode() {
+  async function registerNode(btn) {
     const appName = document.getElementById('regAppName').value;
     const domain = document.getElementById('regDomain').value;
     const category = document.getElementById('regCategory').value;
 
-    if (!appName || !domain) {
-      alert("Please fill in both the App Name and Domain fields.");
-      return;
-    }
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Registering Node...";
 
     try {
       const res = await fetch(`${API_BASE}/v1/node/register`, {
@@ -433,80 +219,82 @@
       });
 
       const data = await res.json();
-      if (data.apiKey) {
-        document.getElementById('campApiKey').value = data.apiKey;
-        updateEmbedSnippet(data.apiKey);
-        
-        // Progress bar visual state update
-        document.getElementById('step2-indicator').classList.add('active');
-        
-        alert(`Node registered! 20 Credits claimed. API Key auto-filled into Step 2.`);
-      } else {
-        alert(data.error || "Registration failed");
+      if (!res.ok) {
+        document.getElementById('step2-indicator').classList.remove('active');
+        throw new Error(data.error || "Registration failed");
       }
+
+      document.getElementById('campApiKey').value = data.apiKey;
+      document.getElementById('step2-indicator').classList.add('active');
+      showToast("Node registered! 20 Credits claimed.", "success");
     } catch (err) {
-      alert("Network error registering node");
+      showToast(err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
   }
 
-  async function createCampaign() {
+  async function createCampaign(btn) {
     const apiKey = document.getElementById('campApiKey').value;
     const title = document.getElementById('campTitle').value;
     const description = document.getElementById('campDesc').value;
     const targetUrl = document.getElementById('campUrl').value;
     const ctaText = document.getElementById('campCta').value;
 
-    if (!apiKey || !title || !targetUrl) {
-      alert("Please provide an API Key, Campaign Title, and Target URL.");
-      return;
-    }
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Launching Campaign...";
 
     try {
       const res = await fetch(`${API_BASE}/v1/campaign/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey, title, description, targetUrl, ctaText })
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey
+        },
+        body: JSON.stringify({ title, description, targetUrl, ctaText })
       });
 
       const data = await res.json();
-      if (data.success) {
-        updateEmbedSnippet(apiKey);
-
-        // Progress bar visual state update
-        document.getElementById('step3-indicator').classList.add('active');
-
-        alert("Campaign launched successfully! Copy your embed code from Step 3.");
-      } else {
-        alert(data.error || "Campaign launch failed");
+      if (!res.ok) {
+        document.getElementById('step3-indicator').classList.remove('active');
+        throw new Error(data.error || "Campaign launch failed");
       }
+
+      const tokenRes = await fetch(`${API_BASE}/v1/widget/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey })
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok) throw new Error(tokenData.error || "Failed to generate widget token");
+
+      updateEmbedSnippet(tokenData.token);
+      document.getElementById('step3-indicator').classList.add('active');
+      showToast("Campaign launched! Embed code ready.", "success");
     } catch (err) {
-      alert("Network error launching campaign");
+      showToast(err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
   }
 
-  function updateEmbedSnippet(apiKey) {
-    const snippet = `<div id="aen-widget"></div>\n<script>\n  (async function() {\n    const res = await fetch('${API_BASE}/v1/recommendation', { headers: { 'x-api-key': '${apiKey}' } });\n    const data = await res.json();\n    if (!data.recommendation) return;\n    const c = data.recommendation;\n    document.getElementById('aen-widget').innerHTML = \`\n      <div style="border:1px solid #38bdf8;padding:16px;border-radius:8px;background:#1e293b;color:#fff;font-family:sans-serif;">\n        <small style="color:#38bdf8;font-weight:bold;">RECOMMENDED</small>\n        <h3 style="margin:4px 0;">\${c.title}</h3>\n        <p style="margin:0 0 12px 0;color:#94a3b8;">\${c.description}</p>\n        <button onclick="aenClick()" style="background:#38bdf8;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-weight:bold;">\${c.ctaText || 'Visit →'}</button>\n      </div>\`;\n    window.aenClick = async () => {\n      await fetch('${API_BASE}/v1/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: '${apiKey}', campaignId: c.campaignId }) });\n      window.open(c.targetUrl, '_blank');\n    };\n  })();\n<\/script>`;
+  function updateEmbedSnippet(widgetToken) {
+    const snippet = `<div id="aen-widget"></div>\n<script>\n  (async function() {\n    try {\n      const res = await fetch('${API_BASE}/v1/recommendation', { headers: { 'x-widget-token': '${widgetToken}' } });\n      const data = await res.json();\n      const container = document.getElementById('aen-widget');\n      if (!container) return;\n      container.innerHTML = '';\n      if (!data.recommendation) {\n        container.innerHTML = '<div style="border:1px dashed #334155;padding:12px;border-radius:8px;color:#94a3b8;font-size:0.85rem;text-align:center;">Network recommendation slot active.</div>';\n        return;\n      }\n      const c = data.recommendation;\n      container.style.cssText = "border:1px solid #38bdf8;padding:16px;border-radius:8px;background:#1e293b;color:#fff;font-family:sans-serif;";\n      const tag = document.createElement('small'); tag.style.cssText = "color:#38bdf8;font-weight:bold;"; tag.textContent = "RECOMMENDED";\n      const title = document.createElement('h3'); title.style.margin = "4px 0"; title.textContent = c.title;\n      const desc = document.createElement('p'); desc.style.cssText = "margin:0 0 12px 0;color:#94a3b8;"; desc.textContent = c.description;\n      const btn = document.createElement('button'); btn.style.cssText = "background:#38bdf8;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-weight:bold;"; btn.textContent = c.ctaText || 'Visit →';\n      btn.onclick = async () => {\n        fetch('${API_BASE}/v1/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clickToken: c.clickToken }) });\n        window.open(c.targetUrl, '_blank');\n      };\n      container.append(tag, title, desc, btn);\n    } catch (e) { console.error("AEN Widget Error:", e); }\n  })();\n<\/script>`;
     document.getElementById('embedCode').textContent = snippet;
   }
 
   async function copyEmbedCode() {
     const codeText = document.getElementById('embedCode').textContent;
-    if (codeText.startsWith('//')) {
-      alert("Please complete Steps 1 & 2 first to generate your custom embed code.");
-      return;
-    }
-
+    if (codeText.startsWith('//')) return showToast("Complete Steps 1 & 2 first.", "error");
+    
     try {
       await navigator.clipboard.writeText(codeText);
-      const copyBtn = document.getElementById('copyBtn');
-      copyBtn.textContent = "Copied to Clipboard! ✓";
-      copyBtn.style.background = "#22c55e";
-      setTimeout(() => {
-        copyBtn.textContent = "Copy Code to Clipboard";
-        copyBtn.style.background = "#334155";
-      }, 2000);
+      showToast("Copied to clipboard!", "success");
     } catch (err) {
-      alert("Failed to auto-copy. Please select and copy manually.");
+      showToast("Failed to copy automatically.", "error");
     }
   }
 
@@ -514,35 +302,17 @@
     try {
       const res = await fetch(`${API_BASE}/v1/dashboard`);
       const data = await res.json();
-
-      document.getElementById('statNodes').textContent = data.summary ? data.summary.totalNodes : 0;
-      document.getElementById('statCampaigns').textContent = data.summary ? data.summary.totalCampaigns : 0;
-      document.getElementById('statTx').textContent = data.summary ? data.summary.totalTransactions : 0;
-
       const nodesList = data.nodes || [];
-      const nodeRows = nodesList.map(n => `
-        <tr>
-          <td><b>${n.appName}</b></td>
-          <td>${n.domain}</td>
-          <td>${n.category}</td>
-          <td style="color:#38bdf8;font-weight:bold;">${n.credits}</td>
-        </tr>
-      `).join('');
-      document.getElementById('nodeTableBody').innerHTML = nodeRows || '<tr><td colspan="4">No nodes registered.</td></tr>';
-
-      const eventsList = data.recentEvents || [];
-      const txRows = eventsList.map(e => `
-        <tr>
-          <td><code>${e.eventId}</code></td>
-          <td>${e.publisherNodeId}</td>
-          <td>${e.advertiserNodeId}</td>
-          <td>${new Date(e.timestamp).toLocaleTimeString()}</td>
-        </tr>
-      `).join('');
-      document.getElementById('txTableBody').innerHTML = txRows || '<tr><td colspan="4">No credit settlements recorded yet.</td></tr>';
+      document.getElementById('nodeTableBody').innerHTML = nodesList.map(n => `
+        <tr><td><b>${escapeHtml(n.appName)}</b></td><td>${escapeHtml(n.domain)}</td><td>${escapeHtml(n.category)}</td><td style="color:#38bdf8;">${n.credits}</td></tr>
+      `).join('') || '<tr><td colspan="4">No nodes registered.</td></tr>';
     } catch (err) {
-      console.error("Dashboard fetch error:", err);
+      showToast("Failed to update dashboard.", "error");
     }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 </script>
 
