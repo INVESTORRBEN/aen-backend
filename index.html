@@ -12,6 +12,7 @@
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --border: #334155;
+      --success: #22c55e;
     }
 
     body {
@@ -43,6 +44,40 @@
       color: var(--text-muted);
       margin: 0;
       font-size: 0.95rem;
+    }
+
+    /* Workflow Progress Steps Bar */
+    .progress-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .step-item {
+      flex: 1;
+      border-top: 3px solid var(--border);
+      padding-top: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .step-item.active {
+      border-top-color: var(--accent);
+      color: var(--text);
+    }
+
+    .step-item strong {
+      display: block;
+      color: var(--accent);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
     }
 
     .tabs {
@@ -85,12 +120,27 @@
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
+      position: relative;
     }
 
     .card h2 {
       margin-top: 0;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-weight: 600;
+      text-transform: uppercase;
     }
 
     .grid-3 {
@@ -139,6 +189,12 @@
       border-radius: 6px;
       color: var(--text);
       box-sizing: border-box;
+      font-size: 0.9rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
     }
 
     button.btn {
@@ -150,6 +206,11 @@
       border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button.btn:hover {
+      opacity: 0.9;
     }
 
     button.btn-secondary {
@@ -176,13 +237,14 @@
 
     code {
       background: #000;
-      padding: 10px;
+      padding: 12px;
       border-radius: 6px;
       display: block;
       white-space: pre-wrap;
       word-break: break-all;
       color: var(--accent);
       font-size: 0.8rem;
+      border: 1px solid var(--border);
     }
   </style>
 </head>
@@ -191,26 +253,46 @@
 <div class="container">
   <header>
     <h1>Autonomous Exchange Network</h1>
-    <p class="subtitle">Decentralized Cross-Promotion & Credit Ledger</p>
+    <p class="subtitle">Decentralized Cross-Promotion & Credit Ledger for Apps</p>
   </header>
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('portal', this)">Developer Portal</button>
-    <button class="tab-btn" onclick="switchTab('dashboard', this)">Live Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('dashboard', this)">Live Network Dashboard</button>
   </div>
 
   <!-- PORTAL TAB -->
   <div id="portal" class="tab-content active">
+
+    <!-- Visual Onboarding Step Bar -->
+    <div class="progress-bar">
+      <div class="step-item active" id="step1-indicator">
+        <strong>Step 1</strong>
+        Register App Node
+      </div>
+      <div class="step-item" id="step2-indicator">
+        <strong>Step 2</strong>
+        Launch Campaign
+      </div>
+      <div class="step-item" id="step3-indicator">
+        <strong>Step 3</strong>
+        Embed & Earn
+      </div>
+    </div>
+
     <!-- SECTION 1 -->
     <div class="card">
-      <h2>Section 1: Register App Node</h2>
+      <h2>1. Register App Node <span class="badge">+20 Free Credits</span></h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Register your app as an active node on the network to generate an API key and claim welcome credits.
+      </p>
       <div class="form-group">
         <label>App / Product Name</label>
-        <input type="text" id="regAppName" placeholder="My Cool Web App" />
+        <input type="text" id="regAppName" placeholder="e.g., DevPulse AI" />
       </div>
       <div class="form-group">
         <label>Domain</label>
-        <input type="text" id="regDomain" placeholder="myapp.com" />
+        <input type="text" id="regDomain" placeholder="e.g., devpulse.io" />
       </div>
       <div class="form-group">
         <label>Category</label>
@@ -226,35 +308,40 @@
 
     <!-- SECTION 2 -->
     <div class="card">
-      <h2>Section 2: Launch Campaign</h2>
+      <h2>2. Launch Campaign <span class="badge">Set Up Your Ad</span></h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Create the recommendation card other app nodes will display to drive high-intent users to your product.
+      </p>
       <div class="form-group">
         <label>Node API Key</label>
-        <input type="text" id="campApiKey" placeholder="key_..." />
+        <input type="text" id="campApiKey" placeholder="Auto-fills upon Step 1 completion or paste existing key" />
       </div>
       <div class="form-group">
         <label>Campaign Title</label>
-        <input type="text" id="campTitle" placeholder="Awesome Product" />
+        <input type="text" id="campTitle" placeholder="e.g., Automated PR Code Reviews" />
       </div>
       <div class="form-group">
         <label>Short Description</label>
-        <textarea id="campDesc" rows="2" placeholder="Describe your product..."></textarea>
+        <textarea id="campDesc" rows="2" placeholder="e.g., Catch bugs and enforce coding standards on every pull request automatically."></textarea>
       </div>
       <div class="form-group">
         <label>Target URL</label>
-        <input type="text" id="campUrl" placeholder="https://example.com" />
+        <input type="text" id="campUrl" placeholder="e.g., https://devpulse.io" />
       </div>
       <div class="form-group">
         <label>Button Text (CTA)</label>
-        <input type="text" id="campCta" value="Visit Site →" />
+        <input type="text" id="campCta" value="Try DevPulse →" />
       </div>
       <button class="btn" onclick="createCampaign()">Launch Campaign</button>
     </div>
 
     <!-- SECTION 3 -->
     <div class="card">
-      <h2>Section 3: Copy Embed Widget Code</h2>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Paste this script tag into any site to display third-party recommendations:</p>
-      <code id="embedCode">// Complete Section 1 & 2 to generate your embed code</code>
+      <h2>3. Copy Embed Widget Code <span class="badge">Earn 1 Credit / Click</span></h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Paste this script tag into your app's footer or sidebar to display peer recommendations and earn credits.
+      </p>
+      <code id="embedCode">// Complete Steps 1 & 2 above to auto-generate your live snippet</code>
       <button class="btn btn-secondary" id="copyBtn" onclick="copyEmbedCode()">Copy Code to Clipboard</button>
     </div>
   </div>
@@ -333,6 +420,11 @@
     const domain = document.getElementById('regDomain').value;
     const category = document.getElementById('regCategory').value;
 
+    if (!appName || !domain) {
+      alert("Please fill in both the App Name and Domain fields.");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/v1/node/register`, {
         method: 'POST',
@@ -344,7 +436,11 @@
       if (data.apiKey) {
         document.getElementById('campApiKey').value = data.apiKey;
         updateEmbedSnippet(data.apiKey);
-        alert(`Node registered successfully! API Key auto-filled into Section 2.`);
+        
+        // Progress bar visual state update
+        document.getElementById('step2-indicator').classList.add('active');
+        
+        alert(`Node registered! 20 Credits claimed. API Key auto-filled into Step 2.`);
       } else {
         alert(data.error || "Registration failed");
       }
@@ -360,6 +456,11 @@
     const targetUrl = document.getElementById('campUrl').value;
     const ctaText = document.getElementById('campCta').value;
 
+    if (!apiKey || !title || !targetUrl) {
+      alert("Please provide an API Key, Campaign Title, and Target URL.");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/v1/campaign/create`, {
         method: 'POST',
@@ -370,7 +471,11 @@
       const data = await res.json();
       if (data.success) {
         updateEmbedSnippet(apiKey);
-        alert("Campaign launched successfully!");
+
+        // Progress bar visual state update
+        document.getElementById('step3-indicator').classList.add('active');
+
+        alert("Campaign launched successfully! Copy your embed code from Step 3.");
       } else {
         alert(data.error || "Campaign launch failed");
       }
@@ -387,7 +492,7 @@
   async function copyEmbedCode() {
     const codeText = document.getElementById('embedCode').textContent;
     if (codeText.startsWith('//')) {
-      alert("Please complete Section 1 & 2 first to generate your code.");
+      alert("Please complete Steps 1 & 2 first to generate your custom embed code.");
       return;
     }
 
