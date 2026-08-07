@@ -150,7 +150,10 @@
 
     <div class="card">
       <h2>2. Launch Campaign</h2>
-      <div class="form-group"><label>Node API Key</label><input type="text" id="campApiKey" placeholder="Paste your key here" /></div>
+      <div class="form-group">
+        <label>Node API Key <span style="font-size:0.75rem; color:var(--success);">(Auto-saved in browser)</span></label>
+        <input type="text" id="campApiKey" placeholder="Paste your key here or register above" oninput="saveApiKeyInput(this.value)" />
+      </div>
       <div class="form-group"><label>Campaign Title</label><input type="text" id="campTitle" placeholder="e.g., Automated Code Reviews" /></div>
       <div class="form-group"><label>Description</label><textarea id="campDesc" rows="2" placeholder="Catch bugs on every PR automatically."></textarea></div>
       <div class="form-group"><label>Target URL</label><input type="text" id="campUrl" placeholder="https://devpulse.io" /></div>
@@ -177,14 +180,30 @@
 </div>
 
 <script>
-  // Build-time / Environment aware endpoint resolution
   const API_BASE = (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL) 
     ? process.env.VITE_API_URL 
     : (window.location.origin.includes('localhost') 
         ? 'http://localhost:3000' 
         : 'https://aen-backend-production-a6b2.up.railway.app');
 
-  // Lightweight Toast System
+  // Load saved API key on startup
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedKey = localStorage.getItem('aen_api_key');
+    if (savedKey) {
+      document.getElementById('campApiKey').value = savedKey;
+      document.getElementById('step2-indicator').classList.add('active');
+    }
+  });
+
+  function saveApiKeyInput(key) {
+    if (key.trim()) {
+      localStorage.setItem('aen_api_key', key.trim());
+      document.getElementById('step2-indicator').classList.add('active');
+    } else {
+      localStorage.removeItem('aen_api_key');
+    }
+  }
+
   function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -207,6 +226,10 @@
     const domain = document.getElementById('regDomain').value;
     const category = document.getElementById('regCategory').value;
 
+    if (!appName || !domain) {
+      return showToast("Please fill in your App Name and Domain.", "error");
+    }
+
     btn.disabled = true;
     const originalText = btn.textContent;
     btn.textContent = "Registering Node...";
@@ -224,9 +247,12 @@
         throw new Error(data.error || "Registration failed");
       }
 
-      document.getElementById('campApiKey').value = data.apiKey;
+      const apiKey = data.apiKey;
+      document.getElementById('campApiKey').value = apiKey;
+      localStorage.setItem('aen_api_key', apiKey);
+
       document.getElementById('step2-indicator').classList.add('active');
-      showToast("Node registered! 20 Credits claimed.", "success");
+      showToast("Node registered! 20 Credits claimed & key saved.", "success");
     } catch (err) {
       showToast(err.message, "error");
     } finally {
@@ -236,11 +262,15 @@
   }
 
   async function createCampaign(btn) {
-    const apiKey = document.getElementById('campApiKey').value;
+    const apiKey = document.getElementById('campApiKey').value.trim();
     const title = document.getElementById('campTitle').value;
     const description = document.getElementById('campDesc').value;
     const targetUrl = document.getElementById('campUrl').value;
     const ctaText = document.getElementById('campCta').value;
+
+    if (!apiKey) {
+      return showToast("Missing API Key. Register your node or paste your key.", "error");
+    }
 
     btn.disabled = true;
     const originalText = btn.textContent;
