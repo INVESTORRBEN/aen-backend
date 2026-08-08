@@ -1,183 +1,258 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AEN - Autonomous Exchange Network</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-
-    /* Buttons */
-    .btn {
-      width: 100%;
-      padding: 12px 20px;
-      background: linear-gradient(to right, #4f46e5, #7c3aed);
-      color: #fff;
-      border: none;
-      border-radius: 0.75rem;
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.3s ease-out;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 48px;
-      box-shadow: 0 10px 20px -6px rgba(79, 70, 229, 0.4);
-      text-decoration: none;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -6px rgba(99, 102, 241, 0.5); }
-    .btn:active { transform: scale(0.98); }
-    .btn-secondary {
-      background: rgba(15, 23, 42, 0.6);
-      color: #e2e8f0;
-      border: 1px solid rgba(51, 65, 85, 0.8);
-      box-shadow: none;
-    }
-    .btn-secondary:hover { background: rgba(30, 41, 59, 0.8); }
-
-    /* Stat Cards */
-    .stat-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(51, 65, 85, 0.8);
-      border-radius: 1rem;
-      padding: 24px;
-      backdrop-filter: blur(12px);
-      text-align: center;
-      transition: all 0.3s ease;
-    }
-    .stat-card:hover {
-      border-color: rgba(99, 102, 241, 0.4);
-      transform: translateY(-2px);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEN — Autonomous Exchange Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out both; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white min-h-screen flex flex-col justify-between">
+<body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
 
-<!-- Navbar -->
-<nav class="max-w-6xl w-full mx-auto px-6 h-20 flex items-center justify-between border-b border-slate-800/60">
-  <div class="flex items-center space-x-2">
-    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">A</div>
-    <span class="font-bold text-lg tracking-tight">AEN<span class="text-indigo-400">.network</span></span>
-  </div>
-  <a href="index.html" class="btn btn-secondary !w-auto !min-h-0 !py-2 !px-4 text-sm">Open Developer Portal →</a>
-</nav>
+    <!-- Navbar -->
+    <nav class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between border-b border-slate-800/60">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">A</div>
+            <span class="font-bold text-lg tracking-tight">AEN<span class="text-indigo-400">.network</span></span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="#how-it-works" class="text-sm text-slate-400 hover:text-white transition-all duration-300 ease-out">How it Works</a>
+            <a href="index.html" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 active:scale-[0.98]">Open Portal</a>
+        </div>
+    </nav>
 
-<!-- Hero Section -->
-<main class="max-w-5xl mx-auto px-6 py-16 text-center">
-  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-6">
-    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-    Decentralized Cross-Promotion Ledger
-  </div>
-  
-  <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-    Autonomous Traffic Exchange <br class="hidden sm:inline" />
-    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">For Modern Developers</span>
-  </h1>
-  
-  <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-10">
-    Trade peer recommendations directly with other software apps and SaaS products. No middlemen, zero ad-network fees, pure organic reach.
-  </p>
+    <!-- Hero Section -->
+    <section class="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-8">
+            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+            <span>Network Launch: Get 20 Free Starting Credits</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+            Cross-promote your app with other indie devs. <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Zero ad budget required.</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+            A decentralized traffic exchange network for indie SaaS builders and developers. Trade lightweight text recommendation widgets, earn credits, and grow together.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="index.html" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 ease-out shadow-xl shadow-indigo-600/30 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-[0.98] text-center">
+                Register Your App Node →
+            </a>
+            <a href="#how-it-works" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium px-8 py-4 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.98] text-center">
+                See How It Works
+            </a>
+        </div>
+    </section>
 
-  <div class="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto mb-16">
-    <a href="index.html" class="btn">Register Node &amp; Claim Credits</a>
-  </div>
+    <!-- Live Network Stats Banner -->
+    <section class="max-w-5xl mx-auto px-6 pb-16">
+        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl backdrop-blur-md px-6 py-8 grid grid-cols-1 sm:grid-cols-3 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-slate-800/60">
+            <div class="flex flex-col items-center text-center pt-6 sm:pt-0 first:pt-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Active Nodes</span>
+                </div>
+                <div id="stat-nodes" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+                <p id="stat-nodes-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">Be one of the first to join the network.</p>
+            </div>
+            <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Total Clicks Handled</span>
+                </div>
+                <div id="stat-clicks" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+                <p id="stat-clicks-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">The network is just getting started.</p>
+            </div>
+            <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Credits Traded</span>
+                </div>
+                <div id="stat-credits" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+                <p id="stat-credits-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">Start exchanging traffic.</p>
+            </div>
+        </div>
+    </section>
 
-  <!-- Live Network Statistics Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-    <!-- Stat 1: Active Nodes -->
-    <div class="stat-card">
-      <h3 class="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2">Active Nodes</h3>
-      <p id="stat-nodes-val" class="text-3xl font-extrabold text-white mb-1">0</p>
-      <p id="stat-nodes-sub" class="text-xs text-slate-400">Loading network status...</p>
-    </div>
+    <!-- How It Works -->
+    <section id="how-it-works" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-900">
+        <div class="text-center max-w-xl mx-auto mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4">How it works</h2>
+            <p class="text-slate-400">From zero to earning traffic in three simple steps.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-lg font-bold mb-6">01</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Register Node</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Add your app name and domain to spin up a network node. Claim 20 free starting credits the moment you register.</p>
+            </div>
+            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center text-lg font-bold mb-6">02</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Launch Campaign</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Spend credits to promote your app across the network. Write a short pitch and let peer nodes showcase your recommendation.</p>
+            </div>
+            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg font-bold mb-6">03</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Embed &amp; Earn</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Drop the lightweight widget onto your site. Every recommendation you display earns credits you can reinvest into growth.</p>
+            </div>
+        </div>
+    </section>
 
-    <!-- Stat 2: Total Clicks Handled -->
-    <div class="stat-card">
-      <h3 class="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2">Total Clicks Handled</h3>
-      <p id="stat-clicks-val" class="text-3xl font-extrabold text-white mb-1">0</p>
-      <p id="stat-clicks-sub" class="text-xs text-slate-400">Loading click metrics...</p>
-    </div>
+    <!-- Interactive Widget Live Preview -->
+    <section class="max-w-5xl mx-auto px-6 py-20 border-t border-slate-900">
+        <div class="text-center max-w-xl mx-auto mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4">See the widget in action</h2>
+            <p class="text-slate-400">This is exactly what visitors see on a network node. Switch themes and try the call-to-action.</p>
+        </div>
+        <div class="max-w-lg mx-auto">
+            <div class="flex items-center justify-center gap-2 mb-8 p-1 rounded-xl bg-slate-900/60 border border-slate-800/80 w-fit mx-auto">
+                <button data-theme="dark" class="widget-tab bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Dark</button>
+                <button data-theme="light" class="widget-tab text-slate-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Light</button>
+                <button data-theme="minimal" class="widget-tab text-slate-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Minimal</button>
+            </div>
+            <div class="rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-md p-8 flex items-center justify-center transition-all duration-300 ease-out">
+                <div id="widget-card" class="w-full max-w-sm rounded-xl border p-5 transition-all duration-300 ease-out">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span id="widget-badge" class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full">Recommended</span>
+                    </div>
+                    <h4 id="widget-title" class="font-semibold text-base mb-1">Postmark for Devs</h4>
+                    <p id="widget-desc" class="text-sm mb-4 leading-relaxed">Reliable transactional email delivery with a dead-simple API. Loved by indie builders.</p>
+                    <button id="widget-cta" class="w-full font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">
+                        Try clicking the CTA →
+                    </button>
+                </div>
+            </div>
+            <p class="text-center text-xs text-slate-500 mt-4">Powered by AEN — every click routes a credit between nodes.</p>
+        </div>
+    </section>
 
-    <!-- Stat 3: Credits Traded -->
-    <div class="stat-card">
-      <h3 class="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2">Credits Traded</h3>
-      <p id="stat-credits-val" class="text-3xl font-extrabold text-white mb-1">0</p>
-      <p id="stat-credits-sub" class="text-xs text-slate-400">Loading credit volume...</p>
-    </div>
-  </div>
-</main>
+    <!-- Features Grid -->
+    <section id="features" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-900">
+        <div class="text-center max-w-xl mx-auto mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4">Built for builders, not ad networks</h2>
+            <p class="text-slate-400">Everything you need to bootstrap your app's early growth without burning cash.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl font-bold mb-6">⚡</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Instant Node Setup</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Register your app name and domain in seconds. Claim your 20 free starting credits immediately upon registration.</p>
+            </div>
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center text-xl font-bold mb-6">🪶</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Ultra-Lightweight Widgets</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Drop a clean, fast text-and-button recommendation card onto your site. Zero heavy scripts or bloated media to slow you down.</p>
+            </div>
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl font-bold mb-6">🔄</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Shared Traffic Economy</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Display peer recommendations on your site to earn credits, then spend those credits to showcase your own app across the network.</p>
+            </div>
+        </div>
+    </section>
 
-<footer class="max-w-6xl w-full mx-auto px-6 py-8 border-t border-slate-900 text-center text-sm text-slate-500">
-  &copy; 2026 AEN. Autonomous Exchange Network. All rights reserved.
-</footer>
+    <!-- CTA Band -->
+    <section class="max-w-5xl mx-auto px-6 py-20 border-t border-slate-900 text-center">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to grow your app?</h2>
+        <p class="text-slate-400 mb-8 max-w-xl mx-auto">Join the network, claim your free credits, and start trading traffic with indie devs today.</p>
+        <a href="index.html" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 ease-out shadow-xl shadow-indigo-600/30 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-[0.98]">
+            Open Portal →
+        </a>
+    </section>
 
-<script>
-  const API_BASE = window.location.origin.includes('localhost')
-    ? 'http://localhost:3000'
-    : 'https://aen-backend-production-a6b2.up.railway.app';
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto px-6 py-12 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500">
+        <div>&copy; 2026 AEN. All rights reserved.</div>
+        <div class="flex space-x-6 mt-4 sm:mt-0">
+            <a href="index.html" class="hover:text-slate-300 transition-all duration-300 ease-out">Developer Portal</a>
+            <a href="#features" class="hover:text-slate-300 transition-all duration-300 ease-out">Features</a>
+        </div>
+    </footer>
 
-  window.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const res = await fetch(`${API_BASE}/v1/dashboard`);
-      if (!res.ok) throw new Error('Failed to fetch stats');
-      
-      const data = await res.json();
-      
-      const nodes = data.nodes || [];
-      const events = data.recentEvents || [];
-      
-      const activeNodesCount = nodes.length;
-      const totalClicksCount = events.length;
-      
-      // Calculate total credits traded across all nodes
-      const totalCreditsTraded = nodes.reduce((acc, node) => acc + (parseInt(node.credits) || 0), 0);
+    <script>
+        const API_BASE = (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL)
+            ? process.env.VITE_API_URL
+            : (window.location.origin.includes('localhost')
+                ? 'http://localhost:3000'
+                : 'https://aen-backend-production-a6b2.up.railway.app');
 
-      // Update values
-      document.getElementById('stat-nodes-val').textContent = activeNodesCount;
-      document.getElementById('stat-clicks-val').textContent = totalClicksCount;
-      document.getElementById('stat-credits-val').textContent = totalCreditsTraded;
+        async function fetchLiveStats() {
+            try {
+                const response = await fetch(`${API_BASE}/v1/dashboard`);
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                const nodesCount = data.nodes ? data.nodes.length : 0;
+                const clicksCount = data.recentEvents ? data.recentEvents.length : 0;
+                const creditsCount = data.nodes ? data.nodes.reduce((acc, node) => acc + (node.credits || 0), 0) : 0;
 
-      // Update dynamic subtexts based on counts
-      const nodesSub = document.getElementById('stat-nodes-sub');
-      const clicksSub = document.getElementById('stat-clicks-sub');
-      const creditsSub = document.getElementById('stat-credits-sub');
+                document.getElementById('stat-nodes').textContent = nodesCount.toLocaleString();
+                document.getElementById('stat-clicks').textContent = clicksCount.toLocaleString();
+                document.getElementById('stat-credits').textContent = creditsCount.toLocaleString();
 
-      if (activeNodesCount === 0) {
-        nodesSub.textContent = "Be one of the first nodes to join the network.";
-        nodesSub.className = "text-xs text-indigo-400 font-medium";
-      } else {
-        nodesSub.textContent = "Active developer applications online.";
-        nodesSub.className = "text-xs text-slate-400";
-      }
+                // Dynamic subtext based on values
+                const nodesSub = document.getElementById('stat-nodes-sub');
+                const clicksSub = document.getElementById('stat-clicks-sub');
+                const creditsSub = document.getElementById('stat-credits-sub');
 
-      if (totalClicksCount === 0) {
-        clicksSub.textContent = "Peer click router awaiting first interactions.";
-        clicksSub.className = "text-xs text-indigo-400 font-medium";
-      } else {
-        clicksSub.textContent = "Successfully routed peer traffic events.";
-        clicksSub.className = "text-xs text-slate-400";
-      }
+                nodesSub.textContent = nodesCount === 0 ? "Be one of the first to join the network." : "Active exchange nodes online.";
+                clicksSub.textContent = clicksCount === 0 ? "The network is just getting started." : "Peer clicks successfully routed.";
+                creditsSub.textContent = creditsCount === 0 ? "Start exchanging traffic." : "Total network credits circulating.";
+            } catch (err) {
+                console.error('Failed to fetch live network stats:', err);
+            }
+        }
 
-      if (totalCreditsTraded === 0) {
-        creditsSub.textContent = "Register to claim your initial free credits.";
-        creditsSub.className = "text-xs text-indigo-400 font-medium";
-      } else {
-        creditsSub.textContent = "Total network credits circulating.";
-        creditsSub.className = "text-xs text-slate-400";
-      }
+        fetchLiveStats();
+        setInterval(fetchLiveStats, 10000);
 
-    } catch (err) {
-      console.error("Dashboard Stats Error:", err);
-      document.getElementById('stat-nodes-sub').textContent = "Offline or connecting...";
-      document.getElementById('stat-clicks-sub').textContent = "Offline or connecting...";
-      document.getElementById('stat-credits-sub').textContent = "Offline or connecting...";
-    }
-  });
-</script>
+        const themes = {
+            dark: { card: 'bg-slate-950 border-slate-800 text-slate-100', badge: 'bg-indigo-500/15 text-indigo-300', desc: 'text-slate-400', cta: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' },
+            light: { card: 'bg-white border-slate-200 text-slate-900', badge: 'bg-indigo-100 text-indigo-700', desc: 'text-slate-500', cta: 'bg-slate-900 hover:bg-slate-800 text-white' },
+            minimal: { card: 'bg-transparent border-slate-700 text-slate-200', badge: 'bg-slate-800 text-slate-300', desc: 'text-slate-400', cta: 'bg-transparent border border-indigo-500 text-indigo-300 hover:bg-indigo-500/10' }
+        };
+        const card = document.getElementById('widget-card');
+        const badge = document.getElementById('widget-badge');
+        const desc = document.getElementById('widget-desc');
+        const cta = document.getElementById('widget-cta');
+        const tabs = document.querySelectorAll('.widget-tab');
+        let ctaClicked = false;
+        function applyTheme(name) {
+            const t = themes[name];
+            card.className = 'w-full max-w-sm rounded-xl border p-5 transition-all duration-300 ease-out ' + t.card;
+            badge.className = 'text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full ' + t.badge;
+            desc.className = 'text-sm mb-4 leading-relaxed ' + t.desc;
+            cta.className = 'w-full font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-300 ease-out active:scale-[0.98] ' + t.cta;
+        }
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => { t.classList.remove('bg-indigo-600', 'text-white'); t.classList.add('text-slate-400'); });
+                tab.classList.add('bg-indigo-600', 'text-white');
+                tab.classList.remove('text-slate-400');
+                applyTheme(tab.dataset.theme);
+            });
+        });
+        cta.addEventListener('click', () => {
+            if (!ctaClicked) {
+                ctaClicked = true;
+                cta.textContent = '✓ Credit routed — nice!';
+                cta.classList.add('animate-pulse');
+                setTimeout(() => { cta.classList.remove('animate-pulse'); cta.textContent = 'Click again to reset ↻'; }, 1200);
+            } else {
+                ctaClicked = false;
+                cta.textContent = 'Try clicking the CTA →';
+            }
+        });
+        applyTheme('dark');
+    </script>
 
 </body>
 </html>
