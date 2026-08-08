@@ -33,7 +33,7 @@
     <section class="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
         <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-8">
             <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-            <span>Now Live: Get 20 Free Starting Credits</span>
+            <span>Network Launch: Get 20 Free Starting Credits</span>
         </div>
         <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
             Cross-promote your app with other indie devs. <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Zero ad budget required.</span>
@@ -175,35 +175,28 @@
     </footer>
 
     <script>
-        function animateCount(el, target, duration, formatter) {
-            const start = performance.now();
-            function tick(now) {
-                const p = Math.min((now - start) / duration, 1);
-                const eased = 1 - Math.pow(1 - p, 3);
-                const value = Math.floor(eased * target);
-                el.textContent = formatter ? formatter(value) : value.toLocaleString();
-                if (p < 1) requestAnimationFrame(tick);
-                else el.textContent = formatter ? formatter(target) : target.toLocaleString();
+        // Fetch real counts directly from the backend dashboard API endpoint
+        async function fetchLiveStats() {
+            try {
+                const response = await fetch('/v1/dashboard');
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                const nodesCount = data.nodes ? data.nodes.length : 0;
+                const clicksCount = data.recentEvents ? data.recentEvents.length : 0;
+                const creditsCount = data.nodes ? data.nodes.reduce((acc, node) => acc + (node.credits || 0), 0) : 0;
+
+                document.getElementById('stat-nodes').textContent = nodesCount.toLocaleString();
+                document.getElementById('stat-clicks').textContent = clicksCount.toLocaleString();
+                document.getElementById('stat-credits').textContent = creditsCount.toLocaleString();
+            } catch (err) {
+                console.error('Failed to fetch live network stats:', err);
             }
-            requestAnimationFrame(tick);
         }
-        const nodesEl = document.getElementById('stat-nodes');
-        const clicksEl = document.getElementById('stat-clicks');
-        const creditsEl = document.getElementById('stat-credits');
-        let nodes = 1428;
-        let clicks = 392517;
-        let credits = 87340;
-        animateCount(nodesEl, nodes, 1400);
-        animateCount(clicksEl, clicks, 1600);
-        animateCount(creditsEl, credits, 1600);
-        setInterval(() => {
-            nodes += Math.floor(Math.random() * 3);
-            clicks += Math.floor(Math.random() * 40) + 5;
-            credits += Math.floor(Math.random() * 12) + 1;
-            nodesEl.textContent = nodes.toLocaleString();
-            clicksEl.textContent = clicks.toLocaleString();
-            creditsEl.textContent = credits.toLocaleString();
-        }, 3000);
+
+        fetchLiveStats();
+        // Refresh live stats every 10 seconds
+        setInterval(fetchLiveStats, 10000);
 
         const themes = {
             dark: { card: 'bg-slate-950 border-slate-800 text-slate-100', badge: 'bg-indigo-500/15 text-indigo-300', desc: 'text-slate-400', cta: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' },
