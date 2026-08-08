@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AEN — Autonomous Exchange Network</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out both; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
@@ -20,33 +24,110 @@
             <span class="font-bold text-lg tracking-tight">AEN<span class="text-indigo-400">.network</span></span>
         </div>
         <div class="flex items-center space-x-4">
-            <a href="#features" class="text-sm text-slate-400 hover:text-white transition">How it Works</a>
-            <a href="index.html" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-lg shadow-indigo-600/20">Open Portal</a>
+            <a href="#how-it-works" class="text-sm text-slate-400 hover:text-white transition-all duration-300 ease-out">How it Works</a>
+            <a href="index.html" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 active:scale-[0.98]">Open Portal</a>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="max-w-5xl mx-auto px-6 pt-24 pb-20 text-center">
+    <section class="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
         <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-8">
             <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
             <span>Now Live: Get 20 Free Starting Credits</span>
         </div>
-        
         <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
             Cross-promote your app with other indie devs. <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Zero ad budget required.</span>
         </h1>
-        
         <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10">
             A decentralized traffic exchange network for indie SaaS builders and developers. Trade lightweight text recommendation widgets, earn credits, and grow together.
         </p>
-
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="index.html" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-4 rounded-xl transition shadow-xl shadow-indigo-600/30 text-center">
+            <a href="index.html" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 ease-out shadow-xl shadow-indigo-600/30 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-[0.98] text-center">
                 Register Your App Node →
             </a>
-            <a href="#features" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium px-8 py-4 rounded-xl transition text-center">
+            <a href="#how-it-works" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium px-8 py-4 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.98] text-center">
                 See How It Works
             </a>
+        </div>
+    </section>
+
+    <!-- Live Network Stats Banner -->
+    <section class="max-w-5xl mx-auto px-6 pb-16">
+        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl backdrop-blur-md px-6 py-8 grid grid-cols-1 sm:grid-cols-3 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-slate-800/60">
+            <div class="flex flex-col items-center text-center pt-6 sm:pt-0 first:pt-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Active Nodes</span>
+                </div>
+                <div id="stat-nodes" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+            </div>
+            <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Total Clicks Handled</span>
+                </div>
+                <div id="stat-clicks" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+            </div>
+            <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Credits Traded</span>
+                </div>
+                <div id="stat-credits" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-900">
+        <div class="text-center max-w-xl mx-auto mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4">How it works</h2>
+            <p class="text-slate-400">From zero to earning traffic in three simple steps.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-lg font-bold mb-6">01</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Register Node</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Add your app name and domain to spin up a network node. Claim 20 free starting credits the moment you register.</p>
+            </div>
+            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center text-lg font-bold mb-6">02</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Launch Campaign</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Spend credits to promote your app across the network. Write a short pitch and let peer nodes showcase your recommendation.</p>
+            </div>
+            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg font-bold mb-6">03</div>
+                <h3 class="text-lg font-semibold text-white mb-2">Embed &amp; Earn</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Drop the lightweight widget onto your site. Every recommendation you display earns credits you can reinvest into growth.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Widget Live Preview -->
+    <section class="max-w-5xl mx-auto px-6 py-20 border-t border-slate-900">
+        <div class="text-center max-w-xl mx-auto mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold mb-4">See the widget in action</h2>
+            <p class="text-slate-400">This is exactly what visitors see on a network node. Switch themes and try the call-to-action.</p>
+        </div>
+        <div class="max-w-lg mx-auto">
+            <div class="flex items-center justify-center gap-2 mb-8 p-1 rounded-xl bg-slate-900/60 border border-slate-800/80 w-fit mx-auto">
+                <button data-theme="dark" class="widget-tab bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Dark</button>
+                <button data-theme="light" class="widget-tab text-slate-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Light</button>
+                <button data-theme="minimal" class="widget-tab text-slate-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Minimal</button>
+            </div>
+            <div class="rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-md p-8 flex items-center justify-center transition-all duration-300 ease-out">
+                <div id="widget-card" class="w-full max-w-sm rounded-xl border p-5 transition-all duration-300 ease-out">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span id="widget-badge" class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full">Recommended</span>
+                    </div>
+                    <h4 id="widget-title" class="font-semibold text-base mb-1">Postmark for Devs</h4>
+                    <p id="widget-desc" class="text-sm mb-4 leading-relaxed">Reliable transactional email delivery with a dead-simple API. Loved by indie builders.</p>
+                    <button id="widget-cta" class="w-full font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">
+                        Try clicking the CTA →
+                    </button>
+                </div>
+            </div>
+            <p class="text-center text-xs text-slate-500 mt-4">Powered by AEN — every click routes a credit between nodes.</p>
         </div>
     </section>
 
@@ -56,24 +137,18 @@
             <h2 class="text-2xl md:text-3xl font-bold mb-4">Built for builders, not ad networks</h2>
             <p class="text-slate-400">Everything you need to bootstrap your app's early growth without burning cash.</p>
         </div>
-
         <div class="grid md:grid-cols-3 gap-8">
-            <!-- Card 1 -->
-            <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-sm">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
                 <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl font-bold mb-6">⚡</div>
                 <h3 class="text-lg font-semibold text-white mb-2">Instant Node Setup</h3>
                 <p class="text-slate-400 text-sm leading-relaxed">Register your app name and domain in seconds. Claim your 20 free starting credits immediately upon registration.</p>
             </div>
-
-            <!-- Card 2 -->
-            <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-sm">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
                 <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center text-xl font-bold mb-6">🪶</div>
                 <h3 class="text-lg font-semibold text-white mb-2">Ultra-Lightweight Widgets</h3>
                 <p class="text-slate-400 text-sm leading-relaxed">Drop a clean, fast text-and-button recommendation card onto your site. Zero heavy scripts or bloated media to slow you down.</p>
             </div>
-
-            <!-- Card 3 -->
-            <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-sm">
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
                 <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl font-bold mb-6">🔄</div>
                 <h3 class="text-lg font-semibold text-white mb-2">Shared Traffic Economy</h3>
                 <p class="text-slate-400 text-sm leading-relaxed">Display peer recommendations on your site to earn credits, then spend those credits to showcase your own app across the network.</p>
@@ -81,14 +156,94 @@
         </div>
     </section>
 
+    <!-- CTA Band -->
+    <section class="max-w-5xl mx-auto px-6 py-20 border-t border-slate-900 text-center">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to grow your app?</h2>
+        <p class="text-slate-400 mb-8 max-w-xl mx-auto">Join the network, claim your free credits, and start trading traffic with indie devs today.</p>
+        <a href="index.html" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 ease-out shadow-xl shadow-indigo-600/30 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-[0.98]">
+            Open Portal →
+        </a>
+    </section>
+
     <!-- Footer -->
     <footer class="max-w-7xl mx-auto px-6 py-12 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500">
         <div>&copy; 2026 AEN. All rights reserved.</div>
         <div class="flex space-x-6 mt-4 sm:mt-0">
-            <a href="index.html" class="hover:text-slate-300 transition">Developer Portal</a>
-            <a href="#features" class="hover:text-slate-300 transition">Features</a>
+            <a href="index.html" class="hover:text-slate-300 transition-all duration-300 ease-out">Developer Portal</a>
+            <a href="#features" class="hover:text-slate-300 transition-all duration-300 ease-out">Features</a>
         </div>
     </footer>
+
+    <script>
+        function animateCount(el, target, duration, formatter) {
+            const start = performance.now();
+            function tick(now) {
+                const p = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                const value = Math.floor(eased * target);
+                el.textContent = formatter ? formatter(value) : value.toLocaleString();
+                if (p < 1) requestAnimationFrame(tick);
+                else el.textContent = formatter ? formatter(target) : target.toLocaleString();
+            }
+            requestAnimationFrame(tick);
+        }
+        const nodesEl = document.getElementById('stat-nodes');
+        const clicksEl = document.getElementById('stat-clicks');
+        const creditsEl = document.getElementById('stat-credits');
+        let nodes = 1428;
+        let clicks = 392517;
+        let credits = 87340;
+        animateCount(nodesEl, nodes, 1400);
+        animateCount(clicksEl, clicks, 1600);
+        animateCount(creditsEl, credits, 1600);
+        setInterval(() => {
+            nodes += Math.floor(Math.random() * 3);
+            clicks += Math.floor(Math.random() * 40) + 5;
+            credits += Math.floor(Math.random() * 12) + 1;
+            nodesEl.textContent = nodes.toLocaleString();
+            clicksEl.textContent = clicks.toLocaleString();
+            creditsEl.textContent = credits.toLocaleString();
+        }, 3000);
+
+        const themes = {
+            dark: { card: 'bg-slate-950 border-slate-800 text-slate-100', badge: 'bg-indigo-500/15 text-indigo-300', desc: 'text-slate-400', cta: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' },
+            light: { card: 'bg-white border-slate-200 text-slate-900', badge: 'bg-indigo-100 text-indigo-700', desc: 'text-slate-500', cta: 'bg-slate-900 hover:bg-slate-800 text-white' },
+            minimal: { card: 'bg-transparent border-slate-700 text-slate-200', badge: 'bg-slate-800 text-slate-300', desc: 'text-slate-400', cta: 'bg-transparent border border-indigo-500 text-indigo-300 hover:bg-indigo-500/10' }
+        };
+        const card = document.getElementById('widget-card');
+        const badge = document.getElementById('widget-badge');
+        const desc = document.getElementById('widget-desc');
+        const cta = document.getElementById('widget-cta');
+        const tabs = document.querySelectorAll('.widget-tab');
+        let ctaClicked = false;
+        function applyTheme(name) {
+            const t = themes[name];
+            card.className = 'w-full max-w-sm rounded-xl border p-5 transition-all duration-300 ease-out ' + t.card;
+            badge.className = 'text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full ' + t.badge;
+            desc.className = 'text-sm mb-4 leading-relaxed ' + t.desc;
+            cta.className = 'w-full font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-300 ease-out active:scale-[0.98] ' + t.cta;
+        }
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => { t.classList.remove('bg-indigo-600', 'text-white'); t.classList.add('text-slate-400'); });
+                tab.classList.add('bg-indigo-600', 'text-white');
+                tab.classList.remove('text-slate-400');
+                applyTheme(tab.dataset.theme);
+            });
+        });
+        cta.addEventListener('click', () => {
+            if (!ctaClicked) {
+                ctaClicked = true;
+                cta.textContent = '✓ Credit routed — nice!';
+                cta.classList.add('animate-pulse');
+                setTimeout(() => { cta.classList.remove('animate-pulse'); cta.textContent = 'Click again to reset ↻'; }, 1200);
+            } else {
+                ctaClicked = false;
+                cta.textContent = 'Try clicking the CTA →';
+            }
+        });
+        applyTheme('dark');
+    </script>
 
 </body>
 </html>
