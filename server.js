@@ -62,14 +62,7 @@ async function initDb() {
   const client = await pool.connect();
 
   try {
-    // Reset database tables during initial development setup
-    // Remove these DROP statements after the first successful deployment if data persistence is needed
-    await client.query(`
-      DROP TABLE IF EXISTS click_tokens CASCADE;
-      DROP TABLE IF EXISTS campaigns CASCADE;
-      DROP TABLE IF EXISTS nodes CASCADE;
-    `);
-
+    // Reset tables during initial setup if needed
     await client.query(`
       CREATE TABLE IF NOT EXISTS nodes (
         id SERIAL PRIMARY KEY,
@@ -142,7 +135,7 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Per‑node rate limiting (in‑memory store)
+// Per-node rate limiting (in-memory store)
 const nodeRateLimitStore = {};
 function nodeRateLimiter(windowMs, max, message) {
   return (req, res, next) => {
@@ -167,7 +160,6 @@ function nodeRateLimiter(windowMs, max, message) {
 }
 
 // -------------------- Authentication Middleware --------------------
-// For API key
 async function authenticateApiKey(req, res, next) {
   const apiKey = req.headers['x-api-key'];
   if (!apiKey) {
@@ -186,7 +178,6 @@ async function authenticateApiKey(req, res, next) {
   }
 }
 
-// For JWT widget token
 function authenticateWidgetToken(req, res, next) {
   const widgetToken = req.headers['x-widget-token'] || req.headers['authorization']?.replace('Bearer ', '');
   if (!widgetToken) {
@@ -242,7 +233,7 @@ app.post('/v1/node/register', async (req, res) => {
   }
 });
 
-// 2. Issue Widget Token (uses API key)
+// 2. Issue Widget Token
 app.post('/v1/widget/token', async (req, res) => {
   const { apiKey } = req.body;
   if (!apiKey) {
@@ -266,7 +257,7 @@ app.post('/v1/widget/token', async (req, res) => {
   }
 });
 
-// 3. Launch Campaign (deducts 1 credit upfront)
+// 3. Launch Campaign
 app.post('/v1/campaign/create', authenticateApiKey, async (req, res) => {
   let { title, description, targetUrl, ctaText } = req.body;
   if (!title || !description || !targetUrl) {
@@ -392,7 +383,6 @@ app.post('/v1/event',
     try {
       await client.query('BEGIN');
 
-      // Consume token: must be unused and within TTL
       const tokenResult = await client.query(
         `UPDATE click_tokens
          SET is_used = true
@@ -410,7 +400,6 @@ app.post('/v1/event',
 
       const { publisher_node_id, campaign_id } = tokenResult.rows[0];
 
-      // Find advertiser node
       const campaignRes = await client.query(
         'SELECT node_id FROM campaigns WHERE id = $1',
         [campaign_id]
@@ -421,7 +410,6 @@ app.post('/v1/event',
       }
       const advertiserNodeId = campaignRes.rows[0].node_id;
 
-      // Deduct 1 credit from advertiser
       const deductRes = await client.query(
         'UPDATE nodes SET credits = credits - 1 WHERE id = $1 AND credits > 0 RETURNING credits',
         [advertiserNodeId]
@@ -431,7 +419,6 @@ app.post('/v1/event',
         return res.status(400).json({ error: 'Advertiser has insufficient credits' });
       }
 
-      // Add 1 credit to publisher
       await client.query(
         'UPDATE nodes SET credits = credits + 1 WHERE id = $1',
         [publisher_node_id]
