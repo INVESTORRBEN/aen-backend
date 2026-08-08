@@ -57,7 +57,7 @@ const isValidUrl = (string) => {
   }
 };
 
-// Database Initialisation
+// Database Initialisation & Seeding
 async function initDb() {
   const client = await pool.connect();
 
@@ -108,6 +108,50 @@ async function initDb() {
     `);
 
     console.log('Database tables verified successfully.');
+
+    // Seed mock nodes & campaigns automatically for bootstrapping
+    const checkNodes = await client.query('SELECT COUNT(*) FROM nodes');
+    if (parseInt(checkNodes.rows[0].count) === 0) {
+      console.log('Seeding initial network nodes and campaigns...');
+      const seedNodes = [
+        { name: "DevPulse", domain: "devpulse.io", category: "Developer Tools", credits: 450 },
+        { name: "TaskFlow", domain: "taskflow.app", category: "Productivity", credits: 1200 },
+        { name: "SaaSTracker", domain: "saastracker.co", category: "SaaS", credits: 310 },
+        { name: "CodeSnippet", domain: "codesnippet.dev", category: "Developer Tools", credits: 890 },
+        { name: "FocusRoom", domain: "focusroom.xyz", category: "Productivity", credits: 670 },
+        { name: "InvoiceFast", domain: "invoicefast.io", category: "SaaS", credits: 1540 },
+        { name: "PixelCraft", domain: "pixelcraft.design", category: "General", credits: 230 },
+        { name: "DataSync", domain: "datasync.tech", category: "Developer Tools", credits: 910 },
+        { name: "NoteWave", domain: "notewave.app", category: "Productivity", credits: 410 },
+        { name: "GrowthMetrics", domain: "growthmetrics.co", category: "SaaS", credits: 780 },
+        { name: "CloudShelf", domain: "cloudshelf.cloud", category: "Developer Tools", credits: 1120 },
+        { name: "SketchBoard", domain: "sketchboard.site", category: "General", credits: 540 }
+      ];
+
+      for (const node of seedNodes) {
+        const apiKey = 'aen_seed_' + crypto.randomBytes(16).toString('hex');
+        const nodeRes = await client.query(
+          `INSERT INTO nodes (app_name, domain, category, api_key, credits)
+           VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+          [node.name, node.domain, node.category, apiKey, node.credits]
+        );
+        const nodeId = nodeRes.rows[0].id;
+
+        // Create a default campaign for each seeded node so the network recommendation engine works right away
+        await client.query(
+          `INSERT INTO campaigns (node_id, title, description, target_url, cta_text)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            nodeId,
+            `Discover ${node.name}`,
+            `Supercharge your workflow with ${node.name}. Built for modern teams and creators.`,
+            `https://${node.domain}`,
+            'Explore Now →'
+          ]
+        );
+      }
+      console.log('Successfully seeded 12 initial active network nodes and campaigns.');
+    }
 
   } catch (err) {
     console.error('Database init error:', err);
