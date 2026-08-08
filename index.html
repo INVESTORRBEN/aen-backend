@@ -51,6 +51,14 @@
       color: #64748b;
       transition: all 0.3s ease-out;
       overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+    }
+    .step-item:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(15, 23, 42, 0.6);
+      transform: translateY(-2px);
     }
     .step-item strong {
       display: block;
@@ -245,13 +253,13 @@
   <div id="portal" class="tab-content active">
     <!-- Step Flow -->
     <div class="flex flex-col sm:flex-row gap-3 mb-8">
-      <div class="step-item active" id="step1-indicator"><strong>Step 1</strong>Register App</div>
-      <div class="step-item" id="step2-indicator"><strong>Step 2</strong>Launch Campaign</div>
-      <div class="step-item" id="step3-indicator"><strong>Step 3</strong>Embed Widget</div>
+      <a href="#step1-card" class="step-item active" id="step1-indicator"><strong>Step 1</strong>Register App</a>
+      <a href="#step2-card" class="step-item" id="step2-indicator"><strong>Step 2</strong>Launch Campaign</a>
+      <a href="#step3-card" class="step-item" id="step3-indicator"><strong>Step 3</strong>Embed Widget</a>
     </div>
 
     <!-- 1. Register -->
-    <div class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 mb-6">
+    <div id="step1-card" class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 mb-6 scroll-mt-6">
       <h2 class="text-lg font-semibold text-white mb-5 flex items-center gap-2">
         <span class="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-400 text-xs font-bold flex items-center justify-center">1</span>
         Register App Node
@@ -282,7 +290,7 @@
     </div>
 
     <!-- 2. Launch -->
-    <div class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 mb-6">
+    <div id="step2-card" class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 mb-6 scroll-mt-6">
       <h2 class="text-lg font-semibold text-white mb-5 flex items-center gap-2">
         <span class="w-6 h-6 rounded-lg bg-violet-500/15 text-violet-400 text-xs font-bold flex items-center justify-center">2</span>
         Launch Campaign
@@ -315,7 +323,7 @@
     </div>
 
     <!-- 3. Embed -->
-    <div class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8">
+    <div id="step3-card" class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 scroll-mt-6">
       <h2 class="text-lg font-semibold text-white mb-2 flex items-center gap-2">
         <span class="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 text-xs font-bold flex items-center justify-center">3</span>
         Copy &amp; Embed Widget Code
