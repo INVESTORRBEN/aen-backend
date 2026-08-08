@@ -60,6 +60,7 @@
                     <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Active Nodes</span>
                 </div>
                 <div id="stat-nodes" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+                <p id="stat-nodes-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">Be one of the first to join the network.</p>
             </div>
             <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
                 <div class="flex items-center gap-2 mb-2">
@@ -67,6 +68,7 @@
                     <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Total Clicks Handled</span>
                 </div>
                 <div id="stat-clicks" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+                <p id="stat-clicks-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">The network is just getting started.</p>
             </div>
             <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
                 <div class="flex items-center gap-2 mb-2">
@@ -74,6 +76,7 @@
                     <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Credits Traded</span>
                 </div>
                 <div id="stat-credits" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
+                <p id="stat-credits-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">Start exchanging traffic.</p>
             </div>
         </div>
     </section>
@@ -175,10 +178,15 @@
     </footer>
 
     <script>
-        // Fetch real counts directly from the backend dashboard API endpoint
+        const API_BASE = (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL)
+            ? process.env.VITE_API_URL
+            : (window.location.origin.includes('localhost')
+                ? 'http://localhost:3000'
+                : 'https://aen-backend-production-a6b2.up.railway.app');
+
         async function fetchLiveStats() {
             try {
-                const response = await fetch('/v1/dashboard');
+                const response = await fetch(`${API_BASE}/v1/dashboard`);
                 if (!response.ok) return;
                 const data = await response.json();
                 
@@ -189,13 +197,21 @@
                 document.getElementById('stat-nodes').textContent = nodesCount.toLocaleString();
                 document.getElementById('stat-clicks').textContent = clicksCount.toLocaleString();
                 document.getElementById('stat-credits').textContent = creditsCount.toLocaleString();
+
+                // Dynamic subtext based on values
+                const nodesSub = document.getElementById('stat-nodes-sub');
+                const clicksSub = document.getElementById('stat-clicks-sub');
+                const creditsSub = document.getElementById('stat-credits-sub');
+
+                nodesSub.textContent = nodesCount === 0 ? "Be one of the first to join the network." : "Active exchange nodes online.";
+                clicksSub.textContent = clicksCount === 0 ? "The network is just getting started." : "Peer clicks successfully routed.";
+                creditsSub.textContent = creditsCount === 0 ? "Start exchanging traffic." : "Total network credits circulating.";
             } catch (err) {
                 console.error('Failed to fetch live network stats:', err);
             }
         }
 
         fetchLiveStats();
-        // Refresh live stats every 10 seconds
         setInterval(fetchLiveStats, 10000);
 
         const themes = {
