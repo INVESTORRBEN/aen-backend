@@ -1,258 +1,617 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AEN — Autonomous Exchange Network</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out both; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEN - Autonomous Exchange Network</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+
+    /* Pill tab switcher */
+    .tab-btn {
+      flex: 1;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 0.75rem;
+      transition: all 0.3s ease-out;
+    }
+    .tab-btn:hover { color: #e2e8f0; }
+    .tab-btn.active {
+      background: linear-gradient(to right, #4f46e5, #7c3aed);
+      color: #fff;
+      box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.5);
+    }
+
+    /* Tab content transitions */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: tabIn 0.4s ease-out; }
+    @keyframes tabIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Step indicator cards */
+    .step-item {
+      flex: 1;
+      position: relative;
+      background: rgba(2, 6, 23, 0.4);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+      border-radius: 1rem;
+      padding: 16px;
+      font-size: 0.9rem;
+      color: #64748b;
+      transition: all 0.3s ease-out;
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+    }
+    .step-item:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(15, 23, 42, 0.6);
+      transform: translateY(-2px);
+    }
+    .step-item strong {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 2px;
+      transition: color 0.3s ease-out;
+    }
+    .step-item.active {
+      border-color: rgba(99, 102, 241, 0.6);
+      color: #f1f5f9;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 8px 24px -8px rgba(79, 70, 229, 0.55);
+      background: rgba(30, 27, 75, 0.35);
+    }
+    .step-item.active strong { color: #a5b4fc; }
+    .step-item.active::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, #6366f1, #a78bfa);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 12px 20px;
+      background: linear-gradient(to right, #4f46e5, #7c3aed);
+      color: #fff;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease-out;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      box-shadow: 0 10px 20px -6px rgba(79, 70, 229, 0.4);
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -6px rgba(99, 102, 241, 0.5); }
+    .btn:active { transform: scale(0.98); }
+    .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.6);
+      color: #e2e8f0;
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      box-shadow: none;
+      margin-top: 12px;
+    }
+    .btn-secondary:hover { background: rgba(30, 41, 59, 0.8); box-shadow: none; }
+    .btn-secondary:disabled { background: rgba(15, 23, 42, 0.4); color: #475569; border: 1px dashed rgba(51, 65, 85, 0.8); }
+
+    /* Spinner */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Form controls */
+    .field {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      border-radius: 0.75rem;
+      color: #f1f5f9;
+      box-sizing: border-box;
+      font-size: 16px;
+      transition: all 0.3s ease-out;
+    }
+    .field::placeholder { color: #64748b; }
+    .field:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+      background: rgba(2, 6, 23, 0.85);
+    }
+    select.field { appearance: none; -webkit-appearance: none; }
+
+    /* Terminal code box */
+    code.terminal {
+      display: block;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #64748b;
+      background: transparent;
+      padding: 16px;
+    }
+    code.terminal.unlocked { color: #a5b4fc; }
+
+    /* Dashboard skeleton shimmer */
+    .skeleton-cell {
+      height: 14px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, rgba(30,41,59,0.6) 25%, rgba(51,65,85,0.9) 50%, rgba(30,41,59,0.6) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer {
+      from { background-position: 200% 0; }
+      to { background-position: -200% 0; }
+    }
+
+    /* Category badge */
+    .cat-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.12);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+
+    /* Toast notifications */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.6);
+      animation: fadeIn 0.3s ease-out;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .toast.hide { opacity: 0; transform: translateY(10px); }
+    .toast-success { background: rgba(16, 185, 129, 0.92); }
+    .toast-error { background: rgba(239, 68, 68, 0.92); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white min-h-screen">
 
-    <!-- Navbar -->
-    <nav class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between border-b border-slate-800/60">
-        <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">A</div>
-            <span class="font-bold text-lg tracking-tight">AEN<span class="text-indigo-400">.network</span></span>
-        </div>
-        <div class="flex items-center space-x-4">
-            <a href="#how-it-works" class="text-sm text-slate-400 hover:text-white transition-all duration-300 ease-out">How it Works</a>
-            <a href="index.html" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 active:scale-[0.98]">Open Portal</a>
-        </div>
-    </nav>
+<div id="toast-container"></div>
 
-    <!-- Hero Section -->
-    <section class="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
-        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-8">
-            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-            <span>Network Launch: Get 20 Free Starting Credits</span>
-        </div>
-        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
-            Cross-promote your app with other indie devs. <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Zero ad budget required.</span>
-        </h1>
-        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10">
-            A decentralized traffic exchange network for indie SaaS builders and developers. Trade lightweight text recommendation widgets, earn credits, and grow together.
-        </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="index.html" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 ease-out shadow-xl shadow-indigo-600/30 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-[0.98] text-center">
-                Register Your App Node →
-            </a>
-            <a href="#how-it-works" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium px-8 py-4 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.98] text-center">
-                See How It Works
-            </a>
-        </div>
-    </section>
+<!-- Navbar -->
+<nav class="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between border-b border-slate-800/60">
+  <div class="flex items-center space-x-2">
+    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">A</div>
+    <span class="font-bold text-lg tracking-tight">AEN<span class="text-indigo-400">.network</span></span>
+  </div>
+  <a href="landing.html" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-all duration-300 ease-out">
+    <span aria-hidden="true">←</span> Back to landing
+  </a>
+</nav>
 
-    <!-- Live Network Stats Banner -->
-    <section class="max-w-5xl mx-auto px-6 pb-16">
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl backdrop-blur-md px-6 py-8 grid grid-cols-1 sm:grid-cols-3 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-slate-800/60">
-            <div class="flex flex-col items-center text-center pt-6 sm:pt-0 first:pt-0">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Active Nodes</span>
-                </div>
-                <div id="stat-nodes" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
-                <p id="stat-nodes-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">Be one of the first to join the network.</p>
+<main class="max-w-4xl mx-auto px-6 py-10">
+  <!-- Header -->
+  <header class="text-center mb-10">
+    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3">
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Developer Portal</span>
+    </h1>
+    <p class="text-slate-400">Register your node, launch campaigns, and trade traffic across the network.</p>
+  </header>
+
+  <!-- Pill Tab Switcher -->
+  <div class="flex gap-2 mb-8 bg-slate-900/40 border border-slate-800/80 backdrop-blur-md p-1.5 rounded-2xl">
+    <button class="tab-btn active" onclick="switchTab('portal', this)">Developer Portal</button>
+    <button class="tab-btn" onclick="switchTab('dashboard', this)">Live Network Ledger</button>
+  </div>
+
+  <!-- PORTAL TAB -->
+  <div id="portal" class="tab-content active">
+    <!-- Step Flow Indicators -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-8">
+      <a href="#step1-card" class="step-item" id="step1-indicator"><strong>Step 1</strong>Register App Node</a>
+      <a href="#step2-card" class="step-item" id="step2-indicator"><strong>Step 2</strong>Launch Campaign</a>
+      <a href="#step3-card" class="step-item" id="step3-indicator"><strong>Step 3</strong>Embed Widget Code</a>
+    </div>
+
+    <!-- Responsive Stacked Step Cards Below -->
+    <div class="space-y-6">
+      <!-- 1. Register -->
+      <div id="step1-card" class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 scroll-mt-6">
+        <h2 class="text-lg font-semibold text-white mb-5 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-400 text-xs font-bold flex items-center justify-center">1</span>
+          Register App Node
+        </h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">App Name</label>
+            <input type="text" id="regAppName" class="field" placeholder="e.g., DevPulse AI" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">Domain</label>
+            <input type="text" id="regDomain" class="field" placeholder="e.g., devpulse.io" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">Category</label>
+            <div class="relative">
+              <select id="regCategory" class="field pr-10">
+                <option value="Developer Tools">Developer Tools</option>
+                <option value="Productivity">Productivity</option>
+                <option value="SaaS">SaaS</option>
+                <option value="General">General</option>
+              </select>
+              <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true">▾</span>
             </div>
-            <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Total Clicks Handled</span>
-                </div>
-                <div id="stat-clicks" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
-                <p id="stat-clicks-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">The network is just getting started.</p>
-            </div>
-            <div class="flex flex-col items-center text-center pt-6 sm:pt-0">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
-                    <span class="text-xs font-medium uppercase tracking-wider text-slate-500">Credits Traded</span>
-                </div>
-                <div id="stat-credits" class="text-3xl md:text-4xl font-extrabold text-white tabular-nums">0</div>
-                <p id="stat-credits-sub" class="text-xs text-slate-500 mt-1.5 min-h-[1rem]">Start exchanging traffic.</p>
-            </div>
+          </div>
+          <button class="btn" id="btnRegister" onclick="registerNode(this)">Register Node (+20 Credits)</button>
         </div>
-    </section>
+      </div>
 
-    <!-- How It Works -->
-    <section id="how-it-works" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-900">
-        <div class="text-center max-w-xl mx-auto mb-16">
-            <h2 class="text-2xl md:text-3xl font-bold mb-4">How it works</h2>
-            <p class="text-slate-400">From zero to earning traffic in three simple steps.</p>
+      <!-- 2. Launch -->
+      <div id="step2-card" class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 scroll-mt-6">
+        <h2 class="text-lg font-semibold text-white mb-5 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-violet-500/15 text-violet-400 text-xs font-bold flex items-center justify-center">2</span>
+          Launch Campaign
+        </h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">
+              Node API Key <span class="text-xs text-emerald-400 font-medium">(Auto-saved in browser)</span>
+            </label>
+            <input type="text" id="campApiKey" class="field" placeholder="Paste your key here or register above" oninput="saveApiKeyInput(this.value)" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">Campaign Title</label>
+            <input type="text" id="campTitle" class="field" placeholder="e.g., Automated Code Reviews" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">Description</label>
+            <textarea id="campDesc" rows="2" class="field resize-none" placeholder="Catch bugs on every PR automatically."></textarea>
+          </div>
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">Target URL</label>
+            <input type="text" id="campUrl" class="field" placeholder="https://devpulse.io" />
+          </div>
+          <div>
+            <label class="block text-sm text-slate-400 mb-1.5">Button Text (CTA)</label>
+            <input type="text" id="campCta" class="field" value="Try DevPulse →" />
+          </div>
+          <button class="btn" id="btnCampaign" onclick="createCampaign(this)">Launch Campaign</button>
         </div>
-        <div class="grid md:grid-cols-3 gap-8">
-            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
-                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-lg font-bold mb-6">01</div>
-                <h3 class="text-lg font-semibold text-white mb-2">Register Node</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Add your app name and domain to spin up a network node. Claim 20 free starting credits the moment you register.</p>
-            </div>
-            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
-                <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center text-lg font-bold mb-6">02</div>
-                <h3 class="text-lg font-semibold text-white mb-2">Launch Campaign</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Spend credits to promote your app across the network. Write a short pitch and let peer nodes showcase your recommendation.</p>
-            </div>
-            <div class="relative bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg font-bold mb-6">03</div>
-                <h3 class="text-lg font-semibold text-white mb-2">Embed &amp; Earn</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Drop the lightweight widget onto your site. Every recommendation you display earns credits you can reinvest into growth.</p>
-            </div>
+      </div>
+
+      <!-- 3. Embed -->
+      <div id="step3-card" class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 scroll-mt-6">
+        <h2 class="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 text-xs font-bold flex items-center justify-center">3</span>
+          Copy &amp; Embed Widget Code
+        </h2>
+        <p class="text-sm text-slate-400 mb-1">Your live snippet will unlock automatically after you complete Steps 1 and 2 above.</p>
+        <p class="text-sm text-indigo-300 mb-4"><strong>What to do:</strong> Paste this snippet anywhere inside your website&apos;s HTML where you want the peer recommendation box to appear.</p>
+
+        <!-- Terminal-style container -->
+        <div class="rounded-xl border border-slate-800/80 bg-slate-950/80 overflow-hidden shadow-inner">
+          <div class="flex items-center gap-1.5 px-4 py-2.5 border-b border-slate-800/80 bg-slate-900/60">
+            <span class="w-3 h-3 rounded-full bg-red-500/70"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500/70"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/70"></span>
+            <span class="ml-3 text-xs text-slate-500 font-mono">aen-widget.html</span>
+          </div>
+          <code id="embedCode" class="terminal">// Locked: Complete Steps 1 &amp; 2 above to generate your live embed code snippet.</code>
         </div>
-    </section>
 
-    <!-- Interactive Widget Live Preview -->
-    <section class="max-w-5xl mx-auto px-6 py-20 border-t border-slate-900">
-        <div class="text-center max-w-xl mx-auto mb-12">
-            <h2 class="text-2xl md:text-3xl font-bold mb-4">See the widget in action</h2>
-            <p class="text-slate-400">This is exactly what visitors see on a network node. Switch themes and try the call-to-action.</p>
-        </div>
-        <div class="max-w-lg mx-auto">
-            <div class="flex items-center justify-center gap-2 mb-8 p-1 rounded-xl bg-slate-900/60 border border-slate-800/80 w-fit mx-auto">
-                <button data-theme="dark" class="widget-tab bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Dark</button>
-                <button data-theme="light" class="widget-tab text-slate-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Light</button>
-                <button data-theme="minimal" class="widget-tab text-slate-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">Minimal</button>
-            </div>
-            <div class="rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-md p-8 flex items-center justify-center transition-all duration-300 ease-out">
-                <div id="widget-card" class="w-full max-w-sm rounded-xl border p-5 transition-all duration-300 ease-out">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span id="widget-badge" class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full">Recommended</span>
-                    </div>
-                    <h4 id="widget-title" class="font-semibold text-base mb-1">Postmark for Devs</h4>
-                    <p id="widget-desc" class="text-sm mb-4 leading-relaxed">Reliable transactional email delivery with a dead-simple API. Loved by indie builders.</p>
-                    <button id="widget-cta" class="w-full font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-300 ease-out active:scale-[0.98]">
-                        Try clicking the CTA →
-                    </button>
-                </div>
-            </div>
-            <p class="text-center text-xs text-slate-500 mt-4">Powered by AEN — every click routes a credit between nodes.</p>
-        </div>
-    </section>
+        <button class="btn btn-secondary" id="copyBtn" onclick="copyEmbedCode()" disabled>Complete Steps 1 &amp; 2 to Unlock</button>
+      </div>
+    </div>
+  </div>
 
-    <!-- Features Grid -->
-    <section id="features" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-900">
-        <div class="text-center max-w-xl mx-auto mb-16">
-            <h2 class="text-2xl md:text-3xl font-bold mb-4">Built for builders, not ad networks</h2>
-            <p class="text-slate-400">Everything you need to bootstrap your app's early growth without burning cash.</p>
-        </div>
-        <div class="grid md:grid-cols-3 gap-8">
-            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
-                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl font-bold mb-6">⚡</div>
-                <h3 class="text-lg font-semibold text-white mb-2">Instant Node Setup</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Register your app name and domain in seconds. Claim your 20 free starting credits immediately upon registration.</p>
-            </div>
-            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
-                <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center text-xl font-bold mb-6">🪶</div>
-                <h3 class="text-lg font-semibold text-white mb-2">Ultra-Lightweight Widgets</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Drop a clean, fast text-and-button recommendation card onto your site. Zero heavy scripts or bloated media to slow you down.</p>
-            </div>
-            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl font-bold mb-6">🔄</div>
-                <h3 class="text-lg font-semibold text-white mb-2">Shared Traffic Economy</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Display peer recommendations on your site to earn credits, then spend those credits to showcase your own app across the network.</p>
-            </div>
-        </div>
-    </section>
+  <!-- DASHBOARD TAB -->
+  <div id="dashboard" class="tab-content">
+    <div class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8">
+      <h2 class="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Active Network Nodes
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="text-left text-xs uppercase tracking-wider text-slate-500">
+              <th class="py-3 px-4 font-medium">Node App</th>
+              <th class="py-3 px-4 font-medium">Domain</th>
+              <th class="py-3 px-4 font-medium">Category</th>
+              <th class="py-3 px-4 font-medium text-right">Credits</th>
+            </tr>
+          </thead>
+          <tbody id="nodeTableBody">
+            <tr><td colspan="4" class="py-4 px-4 text-slate-400">Loading network nodes...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
 
-    <!-- CTA Band -->
-    <section class="max-w-5xl mx-auto px-6 py-20 border-t border-slate-900 text-center">
-        <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to grow your app?</h2>
-        <p class="text-slate-400 mb-8 max-w-xl mx-auto">Join the network, claim your free credits, and start trading traffic with indie devs today.</p>
-        <a href="index.html" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 ease-out shadow-xl shadow-indigo-600/30 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-[0.98]">
-            Open Portal →
-        </a>
-    </section>
+<footer class="max-w-4xl mx-auto px-6 py-10 border-t border-slate-900 text-center text-sm text-slate-500">
+  &copy; 2026 AEN. Decentralized Cross-Promotion Ledger.
+</footer>
 
-    <!-- Footer -->
-    <footer class="max-w-7xl mx-auto px-6 py-12 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500">
-        <div>&copy; 2026 AEN. All rights reserved.</div>
-        <div class="flex space-x-6 mt-4 sm:mt-0">
-            <a href="index.html" class="hover:text-slate-300 transition-all duration-300 ease-out">Developer Portal</a>
-            <a href="#features" class="hover:text-slate-300 transition-all duration-300 ease-out">Features</a>
-        </div>
-    </footer>
+<script>
+  const API_BASE = (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL)
+    ? process.env.VITE_API_URL
+    : (window.location.origin.includes('localhost')
+        ? 'http://localhost:3000'
+        : 'https://aen-backend-production-a6b2.up.railway.app');
 
-    <script>
-        const API_BASE = (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL)
-            ? process.env.VITE_API_URL
-            : (window.location.origin.includes('localhost')
-                ? 'http://localhost:3000'
-                : 'https://aen-backend-production-a6b2.up.railway.app');
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedKey = localStorage.getItem('aen_api_key');
+    if (savedKey) {
+      document.getElementById('campApiKey').value = savedKey;
+      document.getElementById('step2-indicator').classList.add('active');
+    }
 
-        async function fetchLiveStats() {
-            try {
-                const response = await fetch(`${API_BASE}/v1/dashboard`);
-                if (!response.ok) return;
-                const data = await response.json();
-                
-                const nodesCount = data.nodes ? data.nodes.length : 0;
-                const clicksCount = data.recentEvents ? data.recentEvents.length : 0;
-                const creditsCount = data.nodes ? data.nodes.reduce((acc, node) => acc + (node.credits || 0), 0) : 0;
+    // --- Active Scroll-Tracking Intersection Observer ---
+    const stepCards = document.querySelectorAll("#portal .scroll-mt-6");
+    const indicators = {
+      "step1-card": document.getElementById("step1-indicator"),
+      "step2-card": document.getElementById("step2-indicator"),
+      "step3-card": document.getElementById("step3-indicator")
+    };
 
-                document.getElementById('stat-nodes').textContent = nodesCount.toLocaleString();
-                document.getElementById('stat-clicks').textContent = clicksCount.toLocaleString();
-                document.getElementById('stat-credits').textContent = creditsCount.toLocaleString();
+    const observerOptions = {
+      root: null,
+      rootMargin: "-20% 0px -50% 0px",
+      threshold: 0
+    };
 
-                // Dynamic subtext based on values
-                const nodesSub = document.getElementById('stat-nodes-sub');
-                const clicksSub = document.getElementById('stat-clicks-sub');
-                const creditsSub = document.getElementById('stat-credits-sub');
-
-                nodesSub.textContent = nodesCount === 0 ? "Be one of the first to join the network." : "Active exchange nodes online.";
-                clicksSub.textContent = clicksCount === 0 ? "The network is just getting started." : "Peer clicks successfully routed.";
-                creditsSub.textContent = creditsCount === 0 ? "Start exchanging traffic." : "Total network credits circulating.";
-            } catch (err) {
-                console.error('Failed to fetch live network stats:', err);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const cardId = entry.target.id;
+          Object.keys(indicators).forEach(id => {
+            if (indicators[id]) {
+              indicators[id].classList.remove("ring-2", "ring-indigo-400");
             }
+          });
+          if (indicators[cardId]) {
+            indicators[cardId].classList.add("ring-2", "ring-indigo-400");
+          }
         }
+      });
+    }, observerOptions);
 
-        fetchLiveStats();
-        setInterval(fetchLiveStats, 10000);
+    stepCards.forEach(card => observer.observe(card));
+  });
 
-        const themes = {
-            dark: { card: 'bg-slate-950 border-slate-800 text-slate-100', badge: 'bg-indigo-500/15 text-indigo-300', desc: 'text-slate-400', cta: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' },
-            light: { card: 'bg-white border-slate-200 text-slate-900', badge: 'bg-indigo-100 text-indigo-700', desc: 'text-slate-500', cta: 'bg-slate-900 hover:bg-slate-800 text-white' },
-            minimal: { card: 'bg-transparent border-slate-700 text-slate-200', badge: 'bg-slate-800 text-slate-300', desc: 'text-slate-400', cta: 'bg-transparent border border-indigo-500 text-indigo-300 hover:bg-indigo-500/10' }
-        };
-        const card = document.getElementById('widget-card');
-        const badge = document.getElementById('widget-badge');
-        const desc = document.getElementById('widget-desc');
-        const cta = document.getElementById('widget-cta');
-        const tabs = document.querySelectorAll('.widget-tab');
-        let ctaClicked = false;
-        function applyTheme(name) {
-            const t = themes[name];
-            card.className = 'w-full max-w-sm rounded-xl border p-5 transition-all duration-300 ease-out ' + t.card;
-            badge.className = 'text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full ' + t.badge;
-            desc.className = 'text-sm mb-4 leading-relaxed ' + t.desc;
-            cta.className = 'w-full font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-300 ease-out active:scale-[0.98] ' + t.cta;
-        }
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => { t.classList.remove('bg-indigo-600', 'text-white'); t.classList.add('text-slate-400'); });
-                tab.classList.add('bg-indigo-600', 'text-white');
-                tab.classList.remove('text-slate-400');
-                applyTheme(tab.dataset.theme);
-            });
-        });
-        cta.addEventListener('click', () => {
-            if (!ctaClicked) {
-                ctaClicked = true;
-                cta.textContent = '✓ Credit routed — nice!';
-                cta.classList.add('animate-pulse');
-                setTimeout(() => { cta.classList.remove('animate-pulse'); cta.textContent = 'Click again to reset ↻'; }, 1200);
-            } else {
-                ctaClicked = false;
-                cta.textContent = 'Try clicking the CTA →';
-            }
-        });
-        applyTheme('dark');
-    </script>
+  function saveApiKeyInput(key) {
+    if (key.trim()) {
+      localStorage.setItem('aen_api_key', key.trim());
+      document.getElementById('step2-indicator').classList.add('active');
+    } else {
+      localStorage.removeItem('aen_api_key');
+    }
+  }
+
+  function setButtonLoading(btn, isLoading, loadingText) {
+    if (isLoading) {
+      btn.dataset.originalText = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>' + (loadingText || 'Working...');
+    } else {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.originalText || btn.textContent;
+    }
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('hide');
+      setTimeout(() => toast.remove(), 300);
+    }, 3700);
+  }
+
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    if (tabId === 'dashboard') fetchDashboard();
+  }
+
+  async function registerNode(btn) {
+    const appName = document.getElementById('regAppName').value;
+    const domain = document.getElementById('regDomain').value;
+    const category = document.getElementById('regCategory').value;
+
+    if (!appName || !domain) {
+      return showToast("Please fill in your App Name and Domain.", "error");
+    }
+
+    setButtonLoading(btn, true, "Registering Node...");
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/node/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appName, domain, category })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('step2-indicator').classList.remove('active');
+        throw new Error(data.error || "Registration failed");
+      }
+
+      const apiKey = data.apiKey;
+      document.getElementById('campApiKey').value = apiKey;
+      localStorage.setItem('aen_api_key', apiKey);
+
+      document.getElementById('step2-indicator').classList.add('active');
+      showToast("Node registered! 20 Credits claimed & key saved.", "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setButtonLoading(btn, false);
+    }
+  }
+
+  async function createCampaign(btn) {
+    const apiKey = document.getElementById('campApiKey').value.trim();
+    const title = document.getElementById('campTitle').value;
+    const description = document.getElementById('campDesc').value;
+    const targetUrl = document.getElementById('campUrl').value;
+    const ctaText = document.getElementById('campCta').value;
+
+    if (!apiKey) {
+      return showToast("Missing API Key. Register your node or paste your key.", "error");
+    }
+
+    setButtonLoading(btn, true, "Launching Campaign...");
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/campaign/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey
+        },
+        body: JSON.stringify({ title, description, targetUrl, ctaText })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('step3-indicator').classList.remove('active');
+        throw new Error(data.error || "Campaign launch failed");
+      }
+
+      const tokenRes = await fetch(`${API_BASE}/v1/widget/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey })
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok) throw new Error(tokenData.error || "Failed to generate widget token");
+
+      updateEmbedSnippet(tokenData.token);
+      document.getElementById('step3-indicator').classList.add('active');
+      showToast("Campaign launched! Embed code unlocked.", "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setButtonLoading(btn, false);
+    }
+  }
+
+  function updateEmbedSnippet(widgetToken) {
+    // Short, clean snippet referencing the hosted embed.js script
+    const snippet = `<div id="aen-widget"></div>\n<script src="https://investorrben.github.io/aen-backend/embed.js" data-widget-token="${widgetToken}" async><\/script>`;
+
+    const codeEl = document.getElementById('embedCode');
+    codeEl.textContent = snippet;
+    codeEl.classList.add('unlocked');
+
+    const copyBtn = document.getElementById('copyBtn');
+    copyBtn.disabled = false;
+    copyBtn.className = "btn btn-secondary";
+    copyBtn.textContent = "Copy Code to Clipboard";
+  }
+
+  async function copyEmbedCode() {
+    const codeText = document.getElementById('embedCode').textContent;
+    if (codeText.startsWith('//')) return showToast("Complete Steps 1 & 2 first.", "error");
+
+    try {
+      await navigator.clipboard.writeText(codeText);
+      showToast("Copied to clipboard!", "success");
+    } catch (err) {
+      showToast("Failed to copy automatically.", "error");
+    }
+  }
+
+  function renderSkeletonRows(count) {
+    let rows = '';
+    for (let i = 0; i < count; i++) {
+      rows += '<tr class="border-b border-slate-800/60">' +
+        '<td class="py-3 px-4"><div class="skeleton-cell" style="width:70%"></div></td>' +
+        '<td class="py-3 px-4"><div class="skeleton-cell" style="width:80%"></div></td>' +
+        '<td class="py-3 px-4"><div class="skeleton-cell" style="width:60%"></div></td>' +
+        '<td class="py-3 px-4"><div class="skeleton-cell" style="width:40%;margin-left:auto"></div></td>' +
+        '</tr>';
+    }
+    return rows;
+  }
+
+  async function fetchDashboard() {
+    const tbody = document.getElementById('nodeTableBody');
+    tbody.innerHTML = renderSkeletonRows(4);
+    try {
+      const res = await fetch(`${API_BASE}/v1/dashboard`);
+      const data = await res.json();
+      const nodesList = data.nodes || [];
+      tbody.innerHTML = nodesList.map(n => `
+        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors duration-200">
+          <td class="py-3 px-4 font-semibold text-white">${escapeHtml(n.appName)}</td>
+          <td class="py-3 px-4 text-slate-400">${escapeHtml(n.domain)}</td>
+          <td class="py-3 px-4"><span class="cat-badge">${escapeHtml(n.category)}</span></td>
+          <td class="py-3 px-4 text-right font-semibold text-indigo-300 tabular-nums">${n.credits}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" class="py-4 px-4 text-slate-400">No nodes registered.</td></tr>';
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-red-400">Failed to load network nodes. Please try again.</td></tr>';
+      showToast("Failed to update dashboard.", "error");
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+</script>
 
 </body>
 </html>
