@@ -329,7 +329,7 @@
           Copy &amp; Embed Widget Code
         </h2>
         <p class="text-sm text-slate-400 mb-1">Your live snippet will unlock automatically after you complete Steps 1 and 2 above.</p>
-        <p class="text-sm text-indigo-300 mb-4"><strong>What to do:</strong> Paste this snippet anywhere inside your website&apos;s HTML where you want the peer recommendation box to appear.</p>
+        <p class="text-sm text-indigo-300 mb-4"><strong>What to do:</strong> Paste this script snippet anywhere inside your website&apos;s HTML where you want the peer recommendation box to appear.</p>
 
         <!-- Terminal-style container -->
         <div class="rounded-xl border border-slate-800/80 bg-slate-950/80 overflow-hidden shadow-inner">
@@ -549,8 +549,8 @@
   }
 
   function updateEmbedSnippet(widgetToken) {
-    // Short, clean snippet referencing the hosted embed.js script
-    const snippet = `<div id="aen-widget"></div>\n<script src="https://investorrben.github.io/aen-backend/embed.js" data-widget-token="${widgetToken}" async><\/script>`;
+    // Single-line ultra-short snippet referencing embed.js
+    const snippet = `<script src="https://investorrben.github.io/aen-backend/embed.js" data-widget-token="${widgetToken}" async><\/script>`;
 
     const codeEl = document.getElementById('embedCode');
     codeEl.textContent = snippet;
